@@ -9,11 +9,12 @@ class Node(ABC):
         self.voted_for = None
         self.commit_length = 0
         self.current_leader = None
-        self.votes_recieved = []
+        self.votes_received = []
         self.sent_length = {}
         self.acked_length = {}
         self.node_hostnames = settings.NODE_HOSTNAMES
         self.network_service = NetworkService(settings.HOSTNAME, settings.PORT)
+        self.log = []
 
     @abstractmethod
     def receive_vote_request(self):

@@ -1,5 +1,8 @@
+from follower import Follower
+
 class Controller:
     def __init__(self):
+        self.node = Follower()
         # TODO: apply committed log while recovering
         pass
 
