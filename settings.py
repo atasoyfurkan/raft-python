@@ -12,3 +12,5 @@ def getenv_required(key: str) -> str:
 
 HOSTNAME = getenv_required("HOSTNAME")
 PORT = int(getenv_required("PORT"))
+NODE_HOSTNAMES = ['1','2']
+

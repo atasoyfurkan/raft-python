@@ -24,9 +24,9 @@ class NetworkService:
         logging.info(f"Received data: {data}")
         return data
 
-    def send_tcp_message(self, message: str, receiver: str) -> None:
-        logging.info(f"Sending data to {receiver}:{self._port}")
+    def send_tcp_message(self, message: str, receiver_host: str) -> None:
+        logging.info(f"Sending data to {receiver_host}:{self._port}")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
-            client.connect((receiver, self._port))
+            client.connect((receiver_host, self._port))
             client.sendall(str.encode(message))
         logging.info(f"Sent data: {message}")
