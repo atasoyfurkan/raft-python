@@ -1,13 +1,15 @@
-from follower import Follower
+from pkg.network_service import NetworkService
+import settings
+
 
 class Controller:
     def __init__(self):
-        self.node = Follower()
         # TODO: apply committed log while recovering
+        self._network_service = NetworkService(settings.HOSTNAME, settings.PORT)
         pass
 
     def _listen_thread(self):
-        raise NotImplementedError
+        received_data = self._network_service.listen_tcp_socket()
 
     def handle_client_read_request(self):
         raise NotImplementedError
