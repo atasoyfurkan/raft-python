@@ -23,10 +23,11 @@ class ElectionTimeoutService:
             current_time = int(time.time() * 1000)
             elapsed_time = current_time - self._last_received_heartbeat_time_ms
             if elapsed_time >= self._election_timeout_ms:
-                self.controller.node = Candidate()
+                old_node_info = self.controller.node.get_node_info()
+                self.controller.node = Candidate(**old_node_info)
                 self.controller.node.start_election()
                 return
         
-        time.sleep(timedelta(milliseconds=self._election_timeout_ms))
+            time.sleep(timedelta(milliseconds=self._election_timeout_ms))
 
 

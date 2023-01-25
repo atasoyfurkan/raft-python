@@ -6,8 +6,10 @@ import json
 
 class Candidate(Node):
 
-    def __init__(self):
-        super.__init()
+    def __init__(self,current_term =0, voted_for = None, commit_length = 0, current_leader = None, votes_received = [],
+            sent_length = {}, acked_length = {}, log = []):
+        super.__init(self,current_term =0, voted_for = None, commit_length = 0, current_leader = None, votes_received = [],
+            sent_length = {}, acked_length = {}, log = [])
 
     def start_election(self):
         self.current_term += 1
@@ -30,8 +32,8 @@ class Candidate(Node):
     def receive_vote_response(self):
         raise NotImplementedError
 
-    def receive_vote_request(self):
-        raise NotImplementedError
+    def receive_vote_request(self,candidate_hostname):
+        return False
 
     def _send_vote_response(self):
         raise NotImplementedError
