@@ -15,11 +15,10 @@ class Node(ABC):
         self.acked_length = acked_length
         self.node_hostnames = settings.NODE_HOSTNAMES
         self.network_service = NetworkService(settings.HOSTNAME, settings.PORT)
-        self.log = log
+        self.log = log    
 
-    @staticmethod
-    def get_node_info():
-        node_info_dict = __dict__
+    def get_node_info(self):
+        node_info_dict = self. __dict__
         del node_info_dict['node_hostnames'] 
         del node_info_dict['network_service'] 
         return node_info_dict
