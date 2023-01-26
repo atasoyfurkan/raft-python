@@ -1,13 +1,12 @@
 from pkg.node import Node
 from pkg.election_timeout_service import ElectionTimeoutService
-from controller import Controller
-from log_entry import LogEntry
+from pkg.log_entry import LogEntry
 
 
 class Follower(Node):
     def __init__(
         self,
-        controller: Controller,
+        controller,
         current_term: int,
         voted_for: str | None,
         commit_length: int,

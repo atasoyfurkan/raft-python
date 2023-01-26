@@ -1,15 +1,14 @@
 from abc import ABC, abstractmethod
-import settings
-from network_service import NetworkService
-from controller import Controller
-from log_entry import LogEntry
 from typing import Any
+import settings
+from pkg.network_service import NetworkService
+from pkg.log_entry import LogEntry
 
 
 class Node(ABC):
     def __init__(
         self,
-        controller: Controller,
+        controller,
         current_term: int,
         voted_for: str | None,
         commit_length: int,
@@ -22,7 +21,7 @@ class Node(ABC):
         # Implementation logic variables
         self.controller = controller
         self._other_node_hostnames = settings.OTHER_NODE_HOSTNAMES
-        self._network_service = NetworkService(settings.HOSTNAME, settings.PORT)
+        # self._network_service = NetworkService(settings.HOSTNAME, settings.PORT)
 
         # Raft state variables
         self._current_term = current_term
@@ -35,14 +34,17 @@ class Node(ABC):
         self._log = log
 
     def get_current_state(self) -> dict[str, Any]:
-        node_info_dict = self.__dict__
+        current_state = {}
+        current_state["current_term"] = self._current_term
+        current_state["voted_for"] = self._voted_for
+        current_state["commit_length"] = self._commit_length
+        current_state["current_leader"] = self._current_leader
+        current_state["votes_received"] = self._votes_received
+        current_state["sent_length"] = self._sent_length
+        current_state["acked_length"] = self._acked_length
+        current_state["log"] = self._log
 
-        # Delete implementation logic variables
-        del node_info_dict["controller"]
-        del node_info_dict["_other_node_hostnames"]
-        del node_info_dict["_network_service"]
-
-        return node_info_dict
+        return current_state
 
     # return True if votes for the candidate_hostname else returns false
     @abstractmethod

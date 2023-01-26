@@ -1,14 +1,16 @@
-from pkg.network_service import NetworkService
 import settings
-from follower import Follower
-from candidate import Candidate
+import logging
+import threading
+from pkg.network_service import NetworkService
+from pkg.follower import Follower
+from pkg.candidate import Candidate
 
 
 class Controller:
     def __init__(self):
         # TODO: apply committed log while recovering
         # TODO: recover persistent variables from files
-        self._network_service = NetworkService(settings.HOSTNAME, settings.PORT)
+        # self._network_service = NetworkService(settings.HOSTNAME, settings.PORT)
         self._node = Follower(
             self,
             current_term=0,
@@ -21,8 +23,12 @@ class Controller:
             log=[],
         )
 
+        # Start listen thread
+        threading.Thread(target=self._listen_thread).start()
+
     def _listen_thread(self):
-        received_data = self._network_service.listen_tcp_socket()
+        while True:
+            received_data = NetworkService.listen_tcp_socket()
 
     def handle_client_read_request(self):
         raise NotImplementedError

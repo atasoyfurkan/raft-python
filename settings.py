@@ -1,7 +1,7 @@
 import os
 import logging
 
-logging.basicConfig(level=logging.DEBUG, format="%(levelname)s %(message)s")
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
 
 # Utility functions
 def _getenv_required(key: str) -> str:

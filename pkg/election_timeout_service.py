@@ -1,10 +1,12 @@
 import time
 import random
-from candidate import Candidate
-from node import Node
 import logging
+import threading
+from pkg.node import Node
 
-ELECTION_TIMEOUT_INTERVAL_MS = [150, 300]
+
+# ELECTION_TIMEOUT_INTERVAL_MS = [150, 300]
+ELECTION_TIMEOUT_INTERVAL_MS = [2000, 3000]
 ITERATION_SLEEP_TIME_SEC = 0.001
 
 
@@ -14,8 +16,11 @@ class ElectionTimeoutService:
         self._election_timeout_ms = self._generate_election_timeout()
         self._last_received_heartbeat_time_ms = self._get_current_time_ms()
 
+        # Start election timeout thread
+        threading.Thread(target=self._election_timeout_thread).start()
+
         logging.info(
-            "ElectionTimeoutService initialized with election_timeout_ms: {self._election_timeout_ms}} and last_received_heartbeat_time_ms: {self._last_received_heartbeat_time_ms}"
+            f"ElectionTimeoutService initialized with election_timeout_ms: {self._election_timeout_ms} and last_received_heartbeat_time_ms: {self._last_received_heartbeat_time_ms}"
         )
 
     def _generate_election_timeout(self) -> int:
@@ -25,6 +30,8 @@ class ElectionTimeoutService:
         return int(time.time() * 1000)
 
     def _election_timeout_thread(self):
+        logging.info("Election timeout thread started.")
+
         while True:
             current_time = self._get_current_time_ms()
             elapsed_time = current_time - self._last_received_heartbeat_time_ms
