@@ -1,7 +1,7 @@
 ---
 version: '3'
 services:
-  app1:
+  node0:
     build:
       context: .
       dockerfile: containers/Dockerfile
@@ -9,9 +9,10 @@ services:
       - .:/usr/src/app
       - storage1:/usr/src/storage
     environment:
-      - HOSTNAME=app1
-      - PORT=3131
-  app2:
+      - HOSTNAME=node0
+      - PORT
+      - NUMBER_OF_NODES
+  node1:
     build:
       context: .
       dockerfile: containers/Dockerfile
@@ -19,8 +20,9 @@ services:
       - .:/usr/src/app
       - storage2:/usr/src/storage
     environment:
-      - HOSTNAME=app2
-      - PORT=3131
+      - HOSTNAME=node1
+      - PORT
+      - NUMBER_OF_NODES
 
 volumes:
   storage1:
