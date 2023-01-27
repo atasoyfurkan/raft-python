@@ -1,6 +1,7 @@
 import socket
 import logging
 from settings import HOSTNAME, PORT
+import json
 
 
 class NetworkService:

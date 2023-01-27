@@ -35,12 +35,6 @@ class Follower(Node):
 
         self._election_timeout_service = ElectionTimeoutService(self)
 
-    def receive_vote_request(self):
-        raise NotImplementedError
-
-    def _send_vote_response(self):
-        raise NotImplementedError
-
     def receive_log_request(self):
         raise NotImplementedError
 
