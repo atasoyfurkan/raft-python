@@ -4,26 +4,54 @@ from settings import HOSTNAME, PORT
 
 
 class NetworkService:
+    serversocket = None
+
+    def __init__(self):
+        # initialize the serversocket
+        self._get_serversocket()
+
+    def __del__(self):
+        NetworkService.close_serversocket()
+
+    @classmethod
+    def _get_serversocket(cls) -> socket.socket:
+        if cls.serversocket is None:
+            logging.debug(f"Initializing listener on {HOSTNAME}:{PORT}")
+            serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            serversocket.bind((HOSTNAME, PORT))
+            serversocket.listen()
+            cls.serversocket = serversocket
+
+        return cls.serversocket
+
+    # TODO: close the socket when deconstruction happens
+    @classmethod
+    def close_serversocket(cls):
+        if cls.serversocket is not None:
+            cls.serversocket.close()
+            cls.serversocket = None
+
     @classmethod
     def listen_tcp_socket(cls) -> str:
-        logging.info(f"Listening on {HOSTNAME}:{PORT}")
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            s.bind((HOSTNAME, PORT))
-            s.listen()
-            conn, address = s.accept()
-            logging.info(f"Received connection from {address}")
+        logging.debug(f"Accepting connections on {HOSTNAME}:{PORT}")
+        serversocket = cls._get_serversocket()
 
-            with conn:
-                data = conn.recv(10240).decode("utf-8")
+        clientsocket, address = serversocket.accept()
+        logging.debug(f"Received connection from {address}")
 
-        logging.info(f"Received data: {data}")
+        with clientsocket:
+            data = clientsocket.recv(10240).decode("utf-8")
+
+        logging.debug(f"Received data: {data}")
         return data
 
     @classmethod
     def send_tcp_message(cls, message: str, receiver_host: str) -> None:
-        logging.info(f"Sending data to {receiver_host}:{PORT}")
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((receiver_host, PORT))
-            s.sendall(str.encode(message))
-        logging.info(f"Sent data: {message}")
+        logging.debug(f"Sending data to {receiver_host}:{PORT}")
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as clientsocket:
+                clientsocket.connect((receiver_host, PORT))
+                clientsocket.sendall(str.encode(message))
+            logging.debug(f"Sent data: {message}")
+        except ConnectionRefusedError:
+            logging.warning(f"Connection to {receiver_host} refused")
