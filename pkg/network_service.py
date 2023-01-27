@@ -44,7 +44,7 @@ class NetworkService:
             data = clientsocket.recv(10240).decode("utf-8")
 
         logging.debug(f"Received data: {data}")
-        return data
+        return json.loads(data)
 
     @classmethod
     def send_tcp_message(cls, message: str, receiver_host: str) -> None:

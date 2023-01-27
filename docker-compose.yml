@@ -23,9 +23,21 @@ services:
       - HOSTNAME=node1
       - PORT
       - NUMBER_OF_NODES
+  node2:
+    build:
+      context: .
+      dockerfile: containers/Dockerfile
+    volumes:
+      - .:/usr/src/app
+      - storage2:/usr/src/storage
+    environment:
+      - HOSTNAME=node2
+      - PORT
+      - NUMBER_OF_NODES
 
 volumes:
   storage0:
   storage1:
+  storage2:
 
 
