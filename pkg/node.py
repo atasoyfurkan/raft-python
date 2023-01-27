@@ -1,14 +1,18 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 import settings
-from pkg.network_service import NetworkService
-from pkg.log_entry import LogEntry
+import os
+
+if os.environ.get("TYPE_CHECKING"):
+    from pkg.controller import Controller
+    from pkg.log_entry import LogEntry
 
 
 class Node(ABC):
     def __init__(
         self,
-        controller,
+        controller: Controller,
         current_term: int,
         voted_for: str | None,
         commit_length: int,
@@ -21,7 +25,6 @@ class Node(ABC):
         # Implementation logic variables
         self.controller = controller
         self._other_node_hostnames = settings.OTHER_NODE_HOSTNAMES
-        # self._network_service = NetworkService(settings.HOSTNAME, settings.PORT)
 
         # Raft state variables
         self._current_term = current_term
