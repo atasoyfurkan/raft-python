@@ -51,7 +51,7 @@ class Candidate(Node):
                     "last_term": last_term,
                 },
             }
-            logging.info(f"Sending vote request to {receiver_node_hostname}")
+            logging.debug(f"Sending vote request to {receiver_node_hostname}")
             NetworkService.send_tcp_message(json.dumps(message), receiver_node_hostname)
 
     def receive_vote_response(self):
