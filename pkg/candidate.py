@@ -48,15 +48,6 @@ class Candidate(Node):
             logging.info(f"Sending vote request to {receiver_node_hostname}")
             NetworkService.send_tcp_message(json.dumps(message), receiver_node_hostname)
 
-    def receive_vote_response(self):
-        raise NotImplementedError
-
-    def receive_vote_request(self, candidate_hostname):
-        return False
-
-    def _send_vote_response(self):
-        raise NotImplementedError
-
     def receive_log_request(self):
         raise NotImplementedError
 

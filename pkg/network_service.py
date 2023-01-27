@@ -1,6 +1,7 @@
 import socket
 import logging
 from settings import HOSTNAME, PORT
+import json
 
 
 class NetworkService:
@@ -18,7 +19,7 @@ class NetworkService:
                 data = conn.recv(10240).decode("utf-8")
 
         logging.info(f"Received data: {data}")
-        return data
+        return json.loads(data)
 
     @classmethod
     def send_tcp_message(cls, message: str, receiver_host: str) -> None:
