@@ -1,12 +1,17 @@
+from __future__ import annotations
+import os
 from pkg.node import Node
 from pkg.election_timeout_service import ElectionTimeoutService
-from pkg.log_entry import LogEntry
+
+if os.environ.get("TYPE_CHECKING"):
+    from pkg.controller import Controller
+    from pkg.log_entry import LogEntry
 
 
 class Follower(Node):
     def __init__(
         self,
-        controller,
+        controller: Controller,
         current_term: int,
         voted_for: str | None,
         commit_length: int,

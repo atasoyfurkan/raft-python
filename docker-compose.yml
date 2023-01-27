@@ -7,7 +7,7 @@ services:
       dockerfile: containers/Dockerfile
     volumes:
       - .:/usr/src/app
-      - storage1:/usr/src/storage
+      - storage0:/usr/src/storage
     environment:
       - HOSTNAME=node0
       - PORT
@@ -18,12 +18,14 @@ services:
       dockerfile: containers/Dockerfile
     volumes:
       - .:/usr/src/app
-      - storage2:/usr/src/storage
+      - storage1:/usr/src/storage
     environment:
       - HOSTNAME=node1
       - PORT
       - NUMBER_OF_NODES
 
 volumes:
+  storage0:
   storage1:
-  storage2:
+
+

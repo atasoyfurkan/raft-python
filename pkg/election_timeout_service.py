@@ -19,7 +19,7 @@ class ElectionTimeoutService:
         # Start election timeout thread
         threading.Thread(target=self._election_timeout_thread).start()
 
-        logging.info(
+        logging.debug(
             f"ElectionTimeoutService initialized with election_timeout_ms: {self._election_timeout_ms} and last_received_heartbeat_time_ms: {self._last_received_heartbeat_time_ms}"
         )
 
@@ -30,7 +30,7 @@ class ElectionTimeoutService:
         return int(time.time() * 1000)
 
     def _election_timeout_thread(self):
-        logging.info("Election timeout thread started.")
+        logging.debug("Election timeout thread started.")
 
         while True:
             current_time = self._get_current_time_ms()

@@ -1,16 +1,22 @@
+from __future__ import annotations
 import settings
 import json
 import logging
+import os
 from pkg.node import Node
 from pkg.election_timeout_service import ElectionTimeoutService
 from pkg.log_entry import LogEntry
 from pkg.network_service import NetworkService
 
+if os.environ.get("TYPE_CHECKING"):
+    from pkg.controller import Controller
+    from pkg.log_entry import LogEntry
+
 
 class Candidate(Node):
     def __init__(
         self,
-        controller,
+        controller: Controller,
         current_term: int,
         voted_for: str | None,
         commit_length: int,
@@ -45,7 +51,7 @@ class Candidate(Node):
                     "last_term": last_term,
                 },
             }
-            logging.info(f"Sending vote request to {receiver_node_hostname}")
+            logging.debug(f"Sending vote request to {receiver_node_hostname}")
             NetworkService.send_tcp_message(json.dumps(message), receiver_node_hostname)
 
     def receive_log_request(self):
