@@ -36,16 +36,16 @@ class Controller:
                 continue
             elif received_data["method"] == "vote_request":
                 self._node.receive_vote_request(
-                    received_data["args"]["sender_node_hostname"],
-                    received_data["args"]["current_term"],
-                    received_data["args"]["log_length"],
-                    received_data["args"]["last_term"],
+                    candidate_hostname = received_data["args"]["sender_node_hostname"],
+                    candidate_term = received_data["args"]["current_term"],
+                    candidate_log_length = received_data["args"]["log_length"],
+                    candidate_log_term = received_data["args"]["last_term"],
                 )
             elif received_data["method"] == "vote_response":
                 self._node.receive_vote_response(
-                    received_data["args"]["sender_node_hostname"],
-                    received_data["args"]["granted"],
-                    received_data["args"]["voter_term"]
+                    voter_hostname = received_data["args"]["sender_node_hostname"],
+                    granted = received_data["args"]["granted"],
+                    voter_term = received_data["args"]["voter_term"]
                 )
             else:
                 pass
@@ -85,4 +85,4 @@ class Controller:
             self._node = Leader(self, **current_state)
         self.state = new_state
 
-        logging.info(f"New state is {new_state}")
+        logging.debug(f"New state is {new_state}")

@@ -4,7 +4,8 @@ from typing import Any
 import logging
 import json
 import os
-
+import settings
+from pkg.network_service import NetworkService
 if os.environ.get("TYPE_CHECKING"):
     from pkg.controller import Controller
     from pkg.log_entry import LogEntry
@@ -52,8 +53,9 @@ class Node(ABC):
 
     # This function does all the necessary checks to decide if the node will vote for candidate and then
     # calls _send_vote_response function for sending response (Implementation of second page in slides)
+    # TODO : Discuss if we need to update last_hearbeat_time when the node votes
     def receive_vote_request(self,candidate_hostname,candidate_term,candidate_log_length,candidate_log_term):
-        logging.info(f"Vote request is recieved from {candidate_hostname}")
+        logging.debug(f"Vote request is recieved from {candidate_hostname}")
         if candidate_term > self._current_term:
                 self._current_term = candidate_term
                 self._voted_for = None
@@ -67,9 +69,9 @@ class Node(ABC):
 
         if (candidate_term == self._current_term) and log_ok and (self._voted_for == None or self._voted_for == candidate_hostname):
             self._voted_for = candidate_hostname
-            self._send_vote_response(True, candidate_hostname)
+            self._send_vote_response(granted = True, candidate_hostname = candidate_hostname)
         else:
-            self._send_vote_response(False, candidate_hostname)
+            self._send_vote_response(granted = False, candidate_hostname = candidate_hostname)
 
 
     # granted is a boolean parameter and shows if the node will vote for candidate or not
@@ -82,21 +84,21 @@ class Node(ABC):
                     "granted": str(granted),
                 },
             }
-        logging.info(f"Sending vote response from {settings.HOSTNAME} to {candidate_hostname}")
+        logging.debug(f"Sending vote response to {candidate_hostname}")
         NetworkService.send_tcp_message(json.dumps(message), candidate_hostname)
 
 
     # This function is the implementation of the third page in slides
     def receive_vote_response(self, voter_hostname,granted,voter_term):
 
-        logging.info(f"Vote response is received from {voter_hostname}")
+        logging.debug(f"Vote response is received from {voter_hostname}")
 
         if voter_term > self._current_term:
             self._current_term = voter_term
             self._voted_for = None
             self.controller.change_node_state('follower')
-            # add stop election timer
-            logging.info(f"Voter term is larger than current term. Voter_term:{voter_term} , current_term{self._current_term}")
+            # TODO: add stop election timer
+            logging.debug(f"Voter term is larger than current term. Voter_term:{voter_term} , current_term{self._current_term}")
         else:
             if (self.controller.state == 'candidate') and (voter_term == self._current_term) and (granted == "True"):
                 self._votes_received.append(voter_hostname)
@@ -104,7 +106,7 @@ class Node(ABC):
                 if len(self._votes_received) > (len(self._other_node_hostnames) + 1) / 2:
                     self._current_leader = settings.HOSTNAME
                     self.controller.change_node_state('leader')
-                    # add stop election timer
+                    # TODO: add stop election timer
                 for node in self._other_node_hostnames:
                     self._sent_length[node] = len(self._log)
                     self._acked_length[node] = 0
