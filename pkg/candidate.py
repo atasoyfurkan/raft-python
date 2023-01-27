@@ -38,8 +38,6 @@ class Candidate(Node):
             log=log,
         )
 
-        #self._election_timeout_service = ElectionTimeoutService(self)
-
     def _send_vote_request(self, last_term):
         for receiver_node_hostname in self._other_node_hostnames:
             message = {
