@@ -25,7 +25,7 @@ class NetworkService:
 
         return cls.serversocket
 
-    # TODO: close the socket when deconstruction happens
+    # TODO: close the socket when destruction happens
     @classmethod
     def close_serversocket(cls):
         if cls.serversocket is not None:
@@ -54,5 +54,5 @@ class NetworkService:
                 clientsocket.connect((receiver_host, PORT))
                 clientsocket.sendall(str.encode(message))
             logging.debug(f"Sent data: {message}")
-        except ConnectionRefusedError:
+        except socket.gaierror:
             logging.warning(f"Connection to {receiver_host} refused")

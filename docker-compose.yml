@@ -12,6 +12,10 @@ services:
       - HOSTNAME=node0
       - PORT
       - NUMBER_OF_NODES
+      - ELECTION_TIMEOUT_LOWER_MS
+      - ELECTION_TIMEOUT_UPPER_MS
+      - HEARTBEAT_TIMEOUT_MS
+      - ITERATION_SLEEP_TIME_MS
   node1:
     build:
       context: .
@@ -23,6 +27,10 @@ services:
       - HOSTNAME=node1
       - PORT
       - NUMBER_OF_NODES
+      - ELECTION_TIMEOUT_LOWER_MS
+      - ELECTION_TIMEOUT_UPPER_MS
+      - HEARTBEAT_TIMEOUT_MS
+      - ITERATION_SLEEP_TIME_MS
   node2:
     build:
       context: .
@@ -34,6 +42,10 @@ services:
       - HOSTNAME=node2
       - PORT
       - NUMBER_OF_NODES
+      - ELECTION_TIMEOUT_LOWER_MS
+      - ELECTION_TIMEOUT_UPPER_MS
+      - HEARTBEAT_TIMEOUT_MS
+      - ITERATION_SLEEP_TIME_MS
 
 volumes:
   storage0:

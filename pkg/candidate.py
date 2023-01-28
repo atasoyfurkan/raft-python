@@ -4,56 +4,62 @@ import json
 import logging
 import os
 from pkg.node import Node
-from pkg.election_timeout_service import ElectionTimeoutService
-from pkg.log_entry import LogEntry
 from pkg.network_service import NetworkService
+from pkg.election_timeout_service import ElectionTimeoutService
 
 if os.environ.get("TYPE_CHECKING"):
     from pkg.controller import Controller
-    from pkg.log_entry import LogEntry
+    from pkg.storage import Storage
 
 
 class Candidate(Node):
-    def __init__(
-        self,
-        controller: Controller,
-        current_term: int,
-        voted_for: str | None,
-        commit_length: int,
-        current_leader: str | None,
-        votes_received: list[int],
-        sent_length: dict[str, int],
-        acked_length: dict[str, int],
-        log: list[LogEntry],
-    ):
-        super().__init__(
-            controller=controller,
-            current_term=current_term,
-            voted_for=voted_for,
-            commit_length=commit_length,
-            current_leader=current_leader,
-            votes_received=votes_received,
-            sent_length=sent_length,
-            acked_length=acked_length,
-            log=log,
-        )
+    def __init__(self, controller: Controller, storage: Storage):
+        super().__init__(controller=controller, storage=storage)
 
-    def _send_vote_request(self, last_term):
+        self._votes_received = set()
+        self._election_timeout_service = ElectionTimeoutService(self)
+
+    def start_election(self):
+        self.storage.current_term += 1
+        self.storage.voted_for = settings.HOSTNAME
+        self._votes_received = set(settings.HOSTNAME)
+
+        last_term = 0
+        if len(self.storage.log) > 0:
+            last_term = self.storage.log[-1].term
+
+        self._send_vote_request(last_term)
+
+    def _send_vote_request(self, last_term: int):
         for receiver_node_hostname in self._other_node_hostnames:
             message = {
                 "method": "vote_request",
                 "args": {
                     "sender_node_hostname": settings.HOSTNAME,
-                    "current_term": self._current_term,
-                    "log_length": len(self._log),
+                    "current_term": self.storage.current_term,
+                    "log_length": len(self.storage.log),
                     "last_term": last_term,
                 },
             }
             logging.debug(f"Sending vote request to {receiver_node_hostname}")
             NetworkService.send_tcp_message(json.dumps(message), receiver_node_hostname)
 
-    def receive_log_request(self):
-        raise NotImplementedError
+    # This function is the implementation of the third page in slides
+    def receive_vote_response(self, voter_hostname: str, granted: str, voter_term: int):
+        logging.debug(f"Vote response is received from {voter_hostname}")
+
+        if (voter_term == self.storage.current_term) and (granted == "True"):
+            self._votes_received.add(voter_hostname)
+            logging.info(f"Vote is valid")
+            if len(self._votes_received) > (settings.NUMBER_OF_NODES) / 2:
+                logging.info(f"Leader is elected")
+                self.controller.change_node_state("leader")
+
+        elif voter_term > self.storage.current_term:
+            self._discover_new_term(voter_term)
+
+    # def receive_log_request(self):
+    #     raise NotImplementedError
 
     def _send_log_response(self):
         raise NotImplementedError

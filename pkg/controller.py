@@ -1,4 +1,3 @@
-import settings
 import logging
 import threading
 import json
@@ -6,27 +5,34 @@ from pkg.network_service import NetworkService
 from pkg.follower import Follower
 from pkg.candidate import Candidate
 from pkg.leader import Leader
+from pkg.storage import Storage
 
 
 class Controller:
     def __init__(self):
         # TODO: apply committed log while recovering
         # TODO: recover persistent variables from files
-        self._node = Follower(
-            self,
+
+        storage = Storage(
             current_term=0,
             voted_for=None,
             commit_length=0,
             current_leader=None,
-            votes_received=[],
-            sent_length={},
-            acked_length={},
             log=[],
         )
-        self.state = "follower"
+        self._node: Follower | Candidate | Leader = Follower(self, storage)
 
         # Start listen thread
         threading.Thread(target=self._listen_thread).start()
+
+    @property
+    def state(self):
+        if isinstance(self._node, Follower):
+            return "follower"
+        elif isinstance(self._node, Candidate):
+            return "candidate"
+        elif isinstance(self._node, Leader):
+            return "leader"
 
     def _listen_thread(self):
         while True:
@@ -53,37 +59,39 @@ class Controller:
                     voter_term=args["voter_term"],
                 )
 
+            elif method == "log_request":
+                self._node.receive_log_request(
+                    leader_hostname=args["sender_node_hostname"],
+                    leader_term=args["leader_term"],
+                )
+
     def handle_client_read_request(self):
         raise NotImplementedError
 
     def handle_client_write_request(self):
         raise NotImplementedError
 
-    def start_election(self):
-        current_state = self._node.get_current_state()
-        current_state["current_term"] += 1
-        current_state["voted_for"] = settings.HOSTNAME
-        current_state["votes_received"] = [settings.HOSTNAME]
+    def _close_threads_while_changing_state(self):
+        if self.state == "follower" or self.state == "candidate":
+            self._node._election_timeout_service.stop()  # type: ignore
+        elif self.state == "leader":
+            self._node._heartbeat_service.stop()  # type: ignore
 
-        self.state = "candidate"
-        self._node = Candidate(self, **current_state)
-
-        last_term = 0
-        if len(current_state["log"]) > 0:
-            last_term = current_state["log"][-1].term
-
-        self._node._send_vote_request(last_term)
-
-    def change_node_state(self, new_state: str):
+    def change_node_state(self, new_state: str) -> Follower | Candidate | Leader:
         if new_state == self.state:
-            return
-        current_state = self._node.get_current_state()
-        if new_state == "follower":
-            self._node = Follower(self, **current_state)
-        if new_state == "candidate":
-            self._node = Candidate(self, **current_state)
-        if new_state == "leader":
-            self._node = Leader(self, **current_state)
-        self.state = new_state
+            logging.debug(
+                f"New state ({new_state}) is same as current state ({self.state}). No change."
+            )
+        else:
+            self._close_threads_while_changing_state()
 
-        logging.debug(f"New state is {new_state}")
+            storage = self._node.storage
+            if new_state == "follower":
+                self._node = Follower(self, storage)
+            elif new_state == "candidate":
+                self._node = Candidate(self, storage)
+            elif new_state == "leader":
+                self._node = Leader(self, storage)
+            logging.debug(f"New state is {new_state}")
+
+        return self._node

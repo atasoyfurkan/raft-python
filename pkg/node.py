@@ -9,140 +9,84 @@ from pkg.network_service import NetworkService
 
 if os.environ.get("TYPE_CHECKING"):
     from pkg.controller import Controller
-    from pkg.log_entry import LogEntry
+    from pkg.storage import Storage
 
 
 class Node(ABC):
-    def __init__(
-        self,
-        controller: Controller,
-        current_term: int,
-        voted_for: str | None,
-        commit_length: int,
-        current_leader: str | None,
-        votes_received: list[int],
-        sent_length: dict[str, int],
-        acked_length: dict[str, int],
-        log: list[LogEntry],
-    ):
-        # Implementation logic variables
+    def __init__(self, controller: Controller, storage: Storage):
         self.controller = controller
+        self.storage = storage
         self._other_node_hostnames = settings.OTHER_NODE_HOSTNAMES
 
-        # Raft state variables
-        self._current_term = current_term
-        self._voted_for = voted_for
-        self._commit_length = commit_length
-        self._current_leader = current_leader
-        self._votes_received = votes_received
-        self._sent_length = sent_length
-        self._acked_length = acked_length
-        self._log = log
-
-    def get_current_state(self) -> dict[str, Any]:
-        current_state = {}
-        current_state["current_term"] = self._current_term
-        current_state["voted_for"] = self._voted_for
-        current_state["commit_length"] = self._commit_length
-        current_state["current_leader"] = self._current_leader
-        current_state["votes_received"] = self._votes_received
-        current_state["sent_length"] = self._sent_length
-        current_state["acked_length"] = self._acked_length
-        current_state["log"] = self._log
-
-        return current_state
+    def _discover_new_term(self, received_term: int):
+        logging.debug(
+            f"received_term: {received_term} > current_term: {self.storage.current_term}. Becoming follower..."
+        )
+        self.storage.current_term = received_term
+        self.storage.voted_for = None
+        self.controller.change_node_state("follower")
 
     # This function does all the necessary checks to decide if the node will vote for candidate and then
     # calls _send_vote_response function for sending response (Implementation of second page in slides)
-    # TODO : Discuss if we need to update last_hearbeat_time when the node votes
     def receive_vote_request(
         self,
-        candidate_hostname,
-        candidate_term,
-        candidate_log_length,
-        candidate_log_term,
-    ):
+        candidate_hostname: str,
+        candidate_term: int,
+        candidate_log_length: int,
+        candidate_log_term: int,
+    ) -> bool:
         logging.debug(f"Vote request is recieved from {candidate_hostname}")
-        if candidate_term > self._current_term:
-            self._current_term = candidate_term
-            self._voted_for = None
-            self.controller.change_node_state("follower")
+        if candidate_term > self.storage.current_term:
+            self._discover_new_term(candidate_term)
 
         last_term = 0
-        if len(self._log) > 0:
-            last_term = self._log[-1].term
+        if len(self.storage.log) > 0:
+            last_term = self.storage.log[-1].term
 
         log_ok = (candidate_log_term > last_term) or (
             (candidate_log_term == last_term)
-            and (candidate_log_length >= len(self._log))
+            and (candidate_log_length >= len(self.storage.log))
         )
 
+        granted = False
         if (
-            (candidate_term == self._current_term)
+            (candidate_term == self.storage.current_term)
             and log_ok
-            and (self._voted_for == None or self._voted_for == candidate_hostname)
+            and (
+                self.storage.voted_for == None
+                or self.storage.voted_for == candidate_hostname
+            )
         ):
-            self._voted_for = candidate_hostname
-            self._send_vote_response(
-                granted=True, candidate_hostname=candidate_hostname
-            )
-        else:
-            self._send_vote_response(
-                granted=False, candidate_hostname=candidate_hostname
-            )
+            self.storage.voted_for = candidate_hostname
+            granted = True
+
+        self._send_vote_response(granted=granted, candidate_hostname=candidate_hostname)
+        return granted
 
     # granted is a boolean parameter and shows if the node will vote for candidate or not
-    def _send_vote_response(self, granted: bool, candidate_hostname):
+    def _send_vote_response(self, granted: bool, candidate_hostname: str):
         message = {
             "method": "vote_response",
             "args": {
                 "sender_node_hostname": settings.HOSTNAME,
-                "voter_term": self._current_term,
+                "voter_term": self.storage.current_term,
                 "granted": str(granted),
             },
         }
         logging.debug(f"Sending vote response to {candidate_hostname}")
         NetworkService.send_tcp_message(json.dumps(message), candidate_hostname)
 
-    # This function is the implementation of the third page in slides
-    def receive_vote_response(self, voter_hostname, granted, voter_term):
-
-        logging.debug(f"Vote response is received from {voter_hostname}")
-
-        if voter_term > self._current_term:
-            self._current_term = voter_term
-            self._voted_for = None
-            self.controller.change_node_state("follower")
-            # TODO: add stop election timer
-            logging.debug(
-                f"Voter term is larger than current term. Voter_term:{voter_term} , current_term{self._current_term}"
-            )
-        else:
-            if (
-                (self.controller.state == "candidate")
-                and (voter_term == self._current_term)
-                and (granted == "True")
-            ):
-                self._votes_received.append(voter_hostname)
-                logging.info(f"Vote is valid")
-                if (
-                    len(self._votes_received)
-                    > (len(self._other_node_hostnames) + 1) / 2
-                ):
-                    self._current_leader = settings.HOSTNAME
-                    self.controller.change_node_state("leader")
-                    # TODO: add stop election timer
-                for node in self._other_node_hostnames:
-                    self._sent_length[node] = len(self._log)
-                    self._acked_length[node] = 0
-                    self.replicate_log(settings.HOSTNAME, node)
-
-    def replicate_log(self, leader_hostname, follower_hostname):
-        pass
-
     @abstractmethod
-    def receive_log_request(self):
+    def receive_vote_response(self, voter_hostname: str, granted: str, voter_term: int):
         pass
+
+    # @abstractmethod
+    def receive_log_request(self, leader_hostname: str, leader_term: int):
+        logging.debug(f"Log request is received from {leader_hostname}")
+        if leader_term > self.storage.current_term:
+            self.storage.current_leader = leader_hostname
+            self._discover_new_term(leader_term)
+        self._election_timeout_service.receive_heartbeat()  # type: ignore
 
     @abstractmethod
     def _send_log_response(self):
