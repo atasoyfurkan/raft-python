@@ -43,18 +43,14 @@ class Node(ABC):
             last_term = self.storage.log[-1].term
 
         log_ok = (candidate_log_term > last_term) or (
-            (candidate_log_term == last_term)
-            and (candidate_log_length >= len(self.storage.log))
+            (candidate_log_term == last_term) and (candidate_log_length >= len(self.storage.log))
         )
 
         granted = False
         if (
             (candidate_term == self.storage.current_term)
             and log_ok
-            and (
-                self.storage.voted_for == None
-                or self.storage.voted_for == candidate_hostname
-            )
+            and (self.storage.voted_for == None or self.storage.voted_for == candidate_hostname)
         ):
             self.storage.voted_for = candidate_hostname
             granted = True
@@ -69,14 +65,14 @@ class Node(ABC):
             "args": {
                 "sender_node_hostname": settings.HOSTNAME,
                 "voter_term": self.storage.current_term,
-                "granted": str(granted),
+                "granted": granted,
             },
         }
         logging.info(f"Sending vote response to {candidate_hostname}")
         NetworkService.send_tcp_message(json.dumps(message), candidate_hostname)
 
     @abstractmethod
-    def receive_vote_response(self, voter_hostname: str, granted: str, voter_term: int):
+    def receive_vote_response(self, voter_hostname: str, granted: bool, voter_term: int):
         pass
 
     # @abstractmethod

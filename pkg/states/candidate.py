@@ -45,10 +45,10 @@ class Candidate(Node):
             NetworkService.send_tcp_message(json.dumps(message), receiver_node_hostname)
 
     # This function is the implementation of the third page in slides
-    def receive_vote_response(self, voter_hostname: str, granted: str, voter_term: int):
+    def receive_vote_response(self, voter_hostname: str, granted: bool, voter_term: int):
         logging.info(f"Vote response is received from {voter_hostname}")
 
-        if (voter_term == self.storage.current_term) and (granted == "True"):
+        if voter_term == self.storage.current_term and granted:
             self._votes_received.add(voter_hostname)
             logging.info(f"Vote is valid. Current votes: {self._votes_received}")
             if len(self._votes_received) > (settings.NUMBER_OF_NODES) / 2:
