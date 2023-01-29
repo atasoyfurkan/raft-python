@@ -1,15 +1,14 @@
 from __future__ import annotations
-import settings
+import pkg.settings as settings
 import json
 import logging
 import os
-from pkg.node import Node
-from pkg.network_service import NetworkService
-from pkg.election_timeout_service import ElectionTimeoutService
+from pkg.states.node import Node
+from pkg.services import NetworkService, ElectionTimeoutService
 
 if os.environ.get("TYPE_CHECKING"):
     from pkg.controller import Controller
-    from pkg.storage import Storage
+    from pkg.models import Storage
 
 
 class Candidate(Node):

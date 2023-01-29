@@ -1,11 +1,9 @@
 import logging
 import threading
 import json
-from pkg.network_service import NetworkService
-from pkg.follower import Follower
-from pkg.candidate import Candidate
-from pkg.leader import Leader
-from pkg.storage import Storage
+from pkg.states import Follower, Candidate, Leader
+from pkg.models import Storage
+from pkg.services import NetworkService
 
 
 class Controller:

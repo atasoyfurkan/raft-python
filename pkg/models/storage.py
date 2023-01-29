@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 
 if os.environ.get("TYPE_CHECKING"):
-    from pkg.log_entry import LogEntry
+    from pkg.models import LogEntry
 
 
 class Storage:

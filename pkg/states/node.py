@@ -1,15 +1,14 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any
 import logging
 import json
 import os
-import settings
-from pkg.network_service import NetworkService
+import pkg.settings as settings
+from pkg.services import NetworkService
 
 if os.environ.get("TYPE_CHECKING"):
     from pkg.controller import Controller
-    from pkg.storage import Storage
+    from pkg.models import Storage
 
 
 class Node(ABC):

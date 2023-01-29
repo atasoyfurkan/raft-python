@@ -1,12 +1,12 @@
 from __future__ import annotations
 import os
 import logging
-from pkg.node import Node
-from pkg.election_timeout_service import ElectionTimeoutService
+from pkg.states.node import Node
+from pkg.services import ElectionTimeoutService
 
 if os.environ.get("TYPE_CHECKING"):
     from pkg.controller import Controller
-    from pkg.storage import Storage
+    from pkg.models import Storage
 
 
 class Follower(Node):

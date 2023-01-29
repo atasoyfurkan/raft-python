@@ -1,15 +1,14 @@
 from __future__ import annotations
 import logging
-import settings
+import pkg.settings as settings
 import os
 import json
-from pkg.node import Node
-from pkg.heartbeat_service import HeartbeatService
-from pkg.network_service import NetworkService
+from pkg.states.node import Node
+from pkg.services import HeartbeatService, NetworkService
 
 if os.environ.get("TYPE_CHECKING"):
     from pkg.controller import Controller
-    from pkg.storage import Storage
+    from pkg.models import Storage
 
 
 class Leader(Node):

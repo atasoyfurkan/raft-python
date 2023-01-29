@@ -1,7 +1,7 @@
 import logging
+import pkg.settings as settings  # load settings
 from pkg.controller import Controller
-import settings  # load settings
-from pkg.network_service import NetworkService
+from pkg.services import NetworkService
 
 
 logging.debug("Executing main thread")

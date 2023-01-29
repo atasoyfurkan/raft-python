@@ -1,7 +1,6 @@
 import socket
 import logging
-from settings import HOSTNAME, PORT
-import json
+from pkg.settings import HOSTNAME, PORT
 
 
 class NetworkService:
