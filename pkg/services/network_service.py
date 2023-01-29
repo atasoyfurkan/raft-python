@@ -46,12 +46,14 @@ class NetworkService:
         return data
 
     @classmethod
-    def send_tcp_message(cls, message: str, receiver_host: str) -> None:
+    def send_tcp_message(cls, message: str, receiver_host: str) -> bool:
         logging.debug(f"Sending data to {receiver_host}:{PORT}")
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as clientsocket:
                 clientsocket.connect((receiver_host, PORT))
                 clientsocket.sendall(str.encode(message))
             logging.debug(f"Sent data: {message}")
+            return True
         except socket.gaierror or ConnectionRefusedError:
             logging.warning(f"Connection to {receiver_host} refused")
+            return False

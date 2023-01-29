@@ -44,5 +44,5 @@ class Follower(Node):
     def _send_log_response(self):
         raise NotImplementedError
 
-    def receive_client_request(self):
-        raise NotImplementedError
+    # def receive_client_request(self):
+    #     raise NotImplementedError

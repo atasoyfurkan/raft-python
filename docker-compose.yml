@@ -76,6 +76,20 @@ services:
       - ELECTION_TIMEOUT_UPPER_MS
       - HEARTBEAT_TIMEOUT_MS
       - ITERATION_SLEEP_TIME_MS
+  client:
+    build:
+      context: .
+      dockerfile: containers/Dockerfile.client
+    volumes:
+      - .:/usr/src/app
+    environment:
+      - HOSTNAME=client
+      - PORT
+      - NUMBER_OF_NODES
+      - ELECTION_TIMEOUT_LOWER_MS
+      - ELECTION_TIMEOUT_UPPER_MS
+      - HEARTBEAT_TIMEOUT_MS
+      - ITERATION_SLEEP_TIME_MS
 
 volumes:
   storage0:

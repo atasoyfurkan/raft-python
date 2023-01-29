@@ -1,7 +1,7 @@
 import os
 import logging
 
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 # Utility functions
 def _getenv_required(key: str) -> str:
@@ -16,7 +16,9 @@ def _get_other_node_hostnames(hostname, number_of_nodes) -> list[str]:
     node_hostnames = []
     for i in range(number_of_nodes):
         node_hostnames.append(f"node{i}")
-    node_hostnames.remove(hostname)
+
+    if hostname in node_hostnames:
+        node_hostnames.remove(hostname)
 
     logging.debug(f"Other node hostnames: {node_hostnames}")
     return node_hostnames

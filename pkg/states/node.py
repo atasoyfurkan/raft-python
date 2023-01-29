@@ -3,12 +3,14 @@ from abc import ABC, abstractmethod
 import logging
 import json
 import os
+import time
 import pkg.settings as settings
 from pkg.services import NetworkService
 
+
 if os.environ.get("TYPE_CHECKING"):
     from pkg.controller import Controller
-    from pkg.models import Storage
+    from pkg.models import Storage, LogEntry
 
 
 class Node(ABC):
@@ -76,17 +78,53 @@ class Node(ABC):
         pass
 
     # @abstractmethod
-    def receive_log_request(self, leader_hostname: str, leader_term: int):
-        logging.debug(f"Log request is received from {leader_hostname}")
+    # TODO: implement this function properly (Implementation of sixth page in slides). This implementation is just for testing
+    # TODO: it might be required to implement this function in follower and candidate classes seperately (leader implementation is already done)
+    def receive_log_request(
+        self,
+        leader_hostname: str,
+        leader_term: int,
+        prefix_len: int,
+        prefix_term: int,
+        leader_commit: int,
+        suffix: list[LogEntry],
+    ):
+        if len(suffix) > 0:
+            logging.info(
+                f"Log request is received from {leader_hostname} with leader_term: {leader_term} and suffix: {suffix}"
+            )
+        else:
+            logging.debug(f"Log request is received from {leader_hostname} (serves as heartbeat)")
+
         if leader_term > self.storage.current_term:
             self.storage.current_leader = leader_hostname
             self._discover_new_term(leader_term)
+
+        self.storage.current_leader = leader_hostname
         self._election_timeout_service.receive_heartbeat()  # type: ignore
 
     @abstractmethod
     def _send_log_response(self):
         pass
 
-    @abstractmethod
-    def receive_client_request(self):
-        pass
+    # @abstractmethod
+    def receive_client_request(self, msg: str):
+        logging.info(
+            f"Client request is received: {msg} by a non-leader node. Forwarding to the leader {self.storage.current_leader}..."
+        )
+
+        message = {"method": "write", "args": {"msg": msg}}
+        forwarded_node_hostname = self.storage.current_leader
+
+        if forwarded_node_hostname == None:
+            """If there is no leader, wait for 0.5 seconds and send the message to yourself."""
+            time.sleep(0.5)
+            forwarded_node_hostname = settings.HOSTNAME
+
+        success = NetworkService.send_tcp_message(json.dumps(message), forwarded_node_hostname)
+
+        if not success:
+            """If the message is not sent successfully, wait for 0.5 seconds and send the message to yourself."""
+            time.sleep(0.5)
+            forwarded_node_hostname = settings.HOSTNAME
+            NetworkService.send_tcp_message(json.dumps(message), settings.HOSTNAME)

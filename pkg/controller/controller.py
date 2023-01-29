@@ -59,15 +59,22 @@ class Controller:
 
             elif method == "log_request":
                 self._node.receive_log_request(
-                    leader_hostname=args["sender_node_hostname"],
+                    leader_hostname=args["leader_hostname"],
                     leader_term=args["leader_term"],
+                    prefix_len=args["prefix_len"],
+                    prefix_term=args["prefix_term"],
+                    leader_commit=args["leader_commit"],
+                    suffix=args["suffix"],
                 )
+
+            elif method == "write":
+                self.handle_client_write_request(msg=args["msg"])
 
     def handle_client_read_request(self):
         raise NotImplementedError
 
-    def handle_client_write_request(self):
-        raise NotImplementedError
+    def handle_client_write_request(self, msg: str):
+        self._node.receive_client_request(msg=msg)
 
     def _close_threads_while_changing_state(self):
         if self.state == "follower" or self.state == "candidate":
@@ -77,9 +84,7 @@ class Controller:
 
     def change_node_state(self, new_state: str) -> Follower | Candidate | Leader:
         if new_state == self.state:
-            logging.debug(
-                f"New state ({new_state}) is same as current state ({self.state}). No change."
-            )
+            logging.debug(f"New state ({new_state}) is same as current state ({self.state}). No change.")
         else:
             self._close_threads_while_changing_state()
 

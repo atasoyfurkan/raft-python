@@ -1,8 +1,4 @@
-from __future__ import annotations
-import os
-
-if os.environ.get("TYPE_CHECKING"):
-    from pkg.models import LogEntry
+from pkg.models import LogEntry
 
 
 class Storage:
@@ -19,3 +15,6 @@ class Storage:
         self.commit_length = commit_length
         self.current_leader = current_leader
         self.log = log
+
+    def append_log(self, msg: str):
+        self.log.append(LogEntry(term=self.current_term, msg=msg))
