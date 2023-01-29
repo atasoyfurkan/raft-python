@@ -62,9 +62,3 @@ class Candidate(Node):
 
     # def receive_log_request(self):
     #     raise NotImplementedError
-
-    def _send_log_response(self):
-        raise NotImplementedError
-
-    # def receive_client_request(self):
-    #     raise NotImplementedError

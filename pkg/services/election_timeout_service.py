@@ -7,12 +7,12 @@ import os
 import pkg.settings as settings
 
 if os.environ.get("TYPE_CHECKING"):
-    from pkg.states import Follower, Leader, Candidate
+    from pkg.states import Follower, Candidate
 
 
 class ElectionTimeoutService:
-    def __init__(self, current_node: Follower | Candidate | Leader):
-        self._current_node = current_node
+    def __init__(self, node: Follower | Candidate):
+        self._node = node
         self._election_timeout_ms = self._generate_election_timeout()
         self._last_received_heartbeat_time_ms = self._get_current_time_ms()
         self._stop_thread = False
@@ -30,9 +30,7 @@ class ElectionTimeoutService:
         self._last_received_heartbeat_time_ms = self._get_current_time_ms()
 
     def _generate_election_timeout(self) -> int:
-        return random.randint(
-            settings.ELECTION_TIMEOUT_LOWER_MS, settings.ELECTION_TIMEOUT_UPPER_MS
-        )
+        return random.randint(settings.ELECTION_TIMEOUT_LOWER_MS, settings.ELECTION_TIMEOUT_UPPER_MS)
 
     def _get_current_time_ms(self) -> int:
         return int(time.time() * 1000)
@@ -49,9 +47,9 @@ class ElectionTimeoutService:
             if elapsed_time >= self._election_timeout_ms:
                 logging.info("Election timeout reached. Starting election...")
 
-                controller = self._current_node.controller
-                self._current_node = controller.change_node_state("candidate")
-                self._current_node.start_election()  # type: ignore
+                controller = self._node.controller
+                self._node = controller.change_node_state("candidate")
+                self._node.start_election()  # type: ignore
 
                 self._election_timeout_ms = self._generate_election_timeout()
                 self.receive_heartbeat()

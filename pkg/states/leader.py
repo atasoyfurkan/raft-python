@@ -29,11 +29,6 @@ class Leader(Node):
             self._acked_length[follower_hostname] = 0
             self.replicate_log(follower_hostname)
 
-    def receive_vote_response(self, voter_hostname: str, granted: bool, voter_term: int):
-        logging.info(f"Vote response is received from {voter_hostname}")
-        if voter_term > self.storage.current_term:
-            self._discover_new_term(voter_term)
-
     def _send_client_response(self):
         raise NotImplementedError
 
@@ -58,9 +53,6 @@ class Leader(Node):
 
         NetworkService.send_tcp_message(json.dumps(message), follower_hostname)
 
-    def receive_log_response(self):
-        raise NotImplementedError
-
     def receive_log_request(
         self,
         leader_hostname: str,
@@ -75,7 +67,7 @@ class Leader(Node):
             self.storage.current_leader = leader_hostname
             self._discover_new_term(leader_term)
 
-    def _send_log_response(self):
+    def receive_log_response(self):
         raise NotImplementedError
 
     def receive_client_request(self, msg: str):

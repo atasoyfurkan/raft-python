@@ -19,16 +19,6 @@ class Node(ABC):
         self.storage = storage
         self._other_node_hostnames = settings.OTHER_NODE_HOSTNAMES
 
-    def _discover_new_term(self, received_term: int):
-        logging.info(
-            f"received_term > current_term ({received_term} > {self.storage.current_term}). Becoming follower..."
-        )
-        self.storage.current_term = received_term
-        self.storage.voted_for = None
-        self.controller.change_node_state("follower")
-
-    # This function does all the necessary checks to decide if the node will vote for candidate and then
-    # calls _send_vote_response function for sending response (Implementation of second page in slides)
     def receive_vote_request(
         self,
         candidate_hostname: str,
@@ -36,6 +26,10 @@ class Node(ABC):
         candidate_log_length: int,
         candidate_log_term: int,
     ) -> bool:
+        """
+        This function does all the necessary checks to decide if the node will vote for candidate and then
+        calls _send_vote_response function for sending response (Implementation of second page in slides)
+        """
         logging.info(f"Vote request is recieved from {candidate_hostname}")
         if candidate_term > self.storage.current_term:
             self._discover_new_term(candidate_term)
@@ -60,7 +54,6 @@ class Node(ABC):
         self._send_vote_response(granted=granted, candidate_hostname=candidate_hostname)
         return granted
 
-    # granted is a boolean parameter and shows if the node will vote for candidate or not
     def _send_vote_response(self, granted: bool, candidate_hostname: str):
         message = {
             "method": "vote_response",
@@ -73,13 +66,14 @@ class Node(ABC):
         logging.info(f"Sending vote response to {candidate_hostname}")
         NetworkService.send_tcp_message(json.dumps(message), candidate_hostname)
 
-    @abstractmethod
     def receive_vote_response(self, voter_hostname: str, granted: bool, voter_term: int):
-        pass
+        logging.info(f"Vote response is received from {voter_hostname}")
+        if voter_term > self.storage.current_term:
+            self._discover_new_term(voter_term)
 
-    # @abstractmethod
     # TODO: implement this function properly (Implementation of sixth page in slides). This implementation is just for testing
     # TODO: it might be required to implement this function in follower and candidate classes seperately (leader implementation is already done)
+    # @abstractmethod
     def receive_log_request(
         self,
         leader_hostname: str,
@@ -103,11 +97,6 @@ class Node(ABC):
         self.storage.current_leader = leader_hostname
         self._election_timeout_service.receive_heartbeat()  # type: ignore
 
-    @abstractmethod
-    def _send_log_response(self):
-        pass
-
-    # @abstractmethod
     def receive_client_request(self, msg: str):
         logging.info(
             f"Client request is received: {msg} by a non-leader node. Forwarding to the leader {self.storage.current_leader}..."
@@ -128,3 +117,11 @@ class Node(ABC):
             time.sleep(0.5)
             forwarded_node_hostname = settings.HOSTNAME
             NetworkService.send_tcp_message(json.dumps(message), settings.HOSTNAME)
+
+    def _discover_new_term(self, received_term: int):
+        logging.info(
+            f"received_term > current_term ({received_term} > {self.storage.current_term}). Becoming follower..."
+        )
+        self.storage.current_term = received_term
+        self.storage.voted_for = None
+        self.controller.change_node_state("follower")
