@@ -19,8 +19,8 @@ class Node(ABC):
         self._other_node_hostnames = settings.OTHER_NODE_HOSTNAMES
 
     def _discover_new_term(self, received_term: int):
-        logging.debug(
-            f"received_term: {received_term} > current_term: {self.storage.current_term}. Becoming follower..."
+        logging.info(
+            f"received_term > current_term ({received_term} > {self.storage.current_term}). Becoming follower..."
         )
         self.storage.current_term = received_term
         self.storage.voted_for = None
@@ -35,7 +35,7 @@ class Node(ABC):
         candidate_log_length: int,
         candidate_log_term: int,
     ) -> bool:
-        logging.debug(f"Vote request is recieved from {candidate_hostname}")
+        logging.info(f"Vote request is recieved from {candidate_hostname}")
         if candidate_term > self.storage.current_term:
             self._discover_new_term(candidate_term)
 
@@ -73,7 +73,7 @@ class Node(ABC):
                 "granted": str(granted),
             },
         }
-        logging.debug(f"Sending vote response to {candidate_hostname}")
+        logging.info(f"Sending vote response to {candidate_hostname}")
         NetworkService.send_tcp_message(json.dumps(message), candidate_hostname)
 
     @abstractmethod

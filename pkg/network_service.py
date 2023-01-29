@@ -54,5 +54,5 @@ class NetworkService:
                 clientsocket.connect((receiver_host, PORT))
                 clientsocket.sendall(str.encode(message))
             logging.debug(f"Sent data: {message}")
-        except socket.gaierror:
+        except socket.gaierror or ConnectionRefusedError:
             logging.warning(f"Connection to {receiver_host} refused")

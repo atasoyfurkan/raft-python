@@ -34,7 +34,7 @@ class Follower(Node):
         return grant
 
     def receive_vote_response(self, voter_hostname: str, granted: str, voter_term: int):
-        logging.debug(f"Vote response is received from {voter_hostname}")
+        logging.info(f"Vote response is received from {voter_hostname}")
         if voter_term > self.storage.current_term:
             self._discover_new_term(voter_term)
 

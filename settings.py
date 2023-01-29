@@ -8,7 +8,7 @@ def _getenv_required(key: str) -> str:
     value = os.getenv(key)
     assert value is not None, f"Please provide a valid {key}."
 
-    logging.info(f"Environment variable {key} = {value}")
+    logging.debug(f"Environment variable {key} = {value}")
     return value
 
 
@@ -18,7 +18,7 @@ def _get_other_node_hostnames(hostname, number_of_nodes) -> list[str]:
         node_hostnames.append(f"node{i}")
     node_hostnames.remove(hostname)
 
-    logging.info(f"Other node hostnames: {node_hostnames}")
+    logging.debug(f"Other node hostnames: {node_hostnames}")
     return node_hostnames
 
 

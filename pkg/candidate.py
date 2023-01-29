@@ -22,12 +22,13 @@ class Candidate(Node):
     def start_election(self):
         self.storage.current_term += 1
         self.storage.voted_for = settings.HOSTNAME
-        self._votes_received = set(settings.HOSTNAME)
+        self._votes_received = set([settings.HOSTNAME])
 
         last_term = 0
         if len(self.storage.log) > 0:
             last_term = self.storage.log[-1].term
 
+        logging.info(f"Election is started for term: {self.storage.current_term}")
         self._send_vote_request(last_term)
 
     def _send_vote_request(self, last_term: int):
@@ -41,18 +42,20 @@ class Candidate(Node):
                     "last_term": last_term,
                 },
             }
-            logging.debug(f"Sending vote request to {receiver_node_hostname}")
+            logging.info(f"Sending vote request to {receiver_node_hostname}")
             NetworkService.send_tcp_message(json.dumps(message), receiver_node_hostname)
 
     # This function is the implementation of the third page in slides
     def receive_vote_response(self, voter_hostname: str, granted: str, voter_term: int):
-        logging.debug(f"Vote response is received from {voter_hostname}")
+        logging.info(f"Vote response is received from {voter_hostname}")
 
         if (voter_term == self.storage.current_term) and (granted == "True"):
             self._votes_received.add(voter_hostname)
-            logging.info(f"Vote is valid")
+            logging.info(f"Vote is valid. Current votes: {self._votes_received}")
             if len(self._votes_received) > (settings.NUMBER_OF_NODES) / 2:
-                logging.info(f"Leader is elected")
+                logging.info(
+                    f"Leader is elected. Total votes: {len(self._votes_received)} / {settings.NUMBER_OF_NODES}"
+                )
                 self.controller.change_node_state("leader")
 
         elif voter_term > self.storage.current_term:
