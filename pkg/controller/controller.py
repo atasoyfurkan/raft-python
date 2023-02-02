@@ -66,6 +66,13 @@ class Controller:
                     leader_commit=args["leader_commit"],
                     suffix=args["suffix"],
                 )
+            elif method == "log_response":
+                self._node.receive_log_response(
+                    follower=args["sender_node_hostname"],
+                    term=args["current_term"],
+                    ack=args["ack"],
+                    success=args["success"],
+                )
 
             elif method == "write":
                 self.handle_client_write_request(msg=args["msg"])
@@ -84,7 +91,7 @@ class Controller:
 
     def change_node_state(self, new_state: str) -> Follower | Candidate | Leader:
         if new_state == self.state:
-            logging.debug(f"New state ({new_state}) is same as current state ({self.state}). No change.")
+            logging.info(f"New state ({new_state}) is same as current state ({self.state}). No change.")
         else:
             self._close_threads_while_changing_state()
 
@@ -95,6 +102,6 @@ class Controller:
                 self._node = Candidate(self, storage)
             elif new_state == "leader":
                 self._node = Leader(self, storage)
-            logging.debug(f"New state is {new_state}")
+            logging.info(f"New state is {new_state}")
 
         return self._node

@@ -76,6 +76,7 @@ services:
       - ELECTION_TIMEOUT_UPPER_MS
       - HEARTBEAT_TIMEOUT_MS
       - ITERATION_SLEEP_TIME_MS
+
   client:
     build:
       context: .
