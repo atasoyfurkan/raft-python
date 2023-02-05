@@ -119,26 +119,16 @@ class Node(ABC):
         else:
             logging.error("There is no 'current_leader' to send log response")
 
-    def receive_client_write_request(self, msg: str):
+    def receive_client_write_request(self, msg: str, client_hostname: str):
         logging.info(
-            f"Client write request is received: {msg} by a non-leader node. Forwarding to the leader {self.storage.current_leader}..."
+            f"Client write request is received: {msg} by a non-leader node. Leader hostname {self.storage.current_leader} is forwarding to the clients..."
         )
+        message = {
+            "method": "ack",
+            "args": {"success": False, "log_entry": {}, "leader": self.storage.current_leader},
+        }
 
-        message = {"method": "write", "args": {"msg": msg}}
-        forwarded_node_hostname = self.storage.current_leader
-
-        if forwarded_node_hostname == None:
-            """If there is no leader, wait for 0.5 seconds and send the message to yourself."""
-            time.sleep(0.5)
-            forwarded_node_hostname = settings.HOSTNAME
-
-        success = NetworkService.send_tcp_message(json.dumps(message), forwarded_node_hostname)
-
-        if not success:
-            """If the message is not sent successfully, wait for 0.5 seconds and send the message to yourself."""
-            time.sleep(0.5)
-            forwarded_node_hostname = settings.HOSTNAME
-            NetworkService.send_tcp_message(json.dumps(message), settings.HOSTNAME)
+        NetworkService.send_tcp_message(message=json.dumps(message), receiver_host=client_hostname)
 
     def _discover_new_term(self, received_term: int):
         logging.info(
@@ -155,5 +145,5 @@ class Node(ABC):
             self._discover_new_term(term)
 
     # TODO: Discuss what is delivering a log entry
-    def _deliver_log_entry(self, log_entry: LogEntry, log_index: int):
-        logging.info(f"Delivering log entry {log_index} with the message: ({log_entry.msg}) to application")
+    # def _deliver_log_entry(self, log_entry: LogEntry, log_index: int):
+    #     logging.info(f"Delivering log entry {log_index} with the message: ({log_entry.msg}) to application")

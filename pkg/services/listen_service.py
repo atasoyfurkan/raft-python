@@ -70,4 +70,4 @@ class ListenService:
                 )
 
             elif method == "write":
-                self._controller.handle_client_write_request(msg=args["msg"])
+                self._controller.handle_client_write_request(client_hostname=args["hostname"], msg=args["msg"])

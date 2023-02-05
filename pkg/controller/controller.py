@@ -1,6 +1,6 @@
 import logging
 from pkg.states import Follower, Candidate, Leader
-from pkg.models import Storage
+from pkg.models import Storage, LogEntry, StateMachine
 from pkg.services import ListenService
 from typing import cast
 
@@ -18,7 +18,7 @@ class Controller:
             log=[],
         )
         self._node: Follower | Candidate | Leader = Follower(self, storage)
-
+        self._state_machine = StateMachine(log=storage.log)
         self._listen_service = ListenService(self)
 
     def __del__(self):
@@ -27,8 +27,11 @@ class Controller:
     def handle_client_read_request(self):
         raise NotImplementedError
 
-    def handle_client_write_request(self, msg: str):
-        self._node.receive_client_write_request(msg=msg)
+    def handle_client_write_request(self, msg: str, client_hostname: str):
+        self._node.receive_client_write_request(msg=msg, client_hostname=client_hostname)
+
+    def apply_log_entry(self, log_entry: LogEntry):
+        self._state_machine.apply_log_entry(log_entry=log_entry)
 
     def convert_to_follower(self) -> Follower:
         return cast(Follower, self._convert(Follower))
