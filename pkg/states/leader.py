@@ -77,7 +77,7 @@ class Leader(Node):
         )
 
     def receive_log_response(self, follower_hostname: str, term: int, ack: int, success: bool):
-        logging.info(
+        logging.debug(
             f"Log response received from: {follower_hostname}, current state is leader, received data -> term: {term}, ack: {ack}, success: {success}"
         )
 
