@@ -16,5 +16,8 @@ class Storage:
         self.current_leader = current_leader
         self.log = log
 
-    def append_log(self, msg: str):
+    def append_log_by_leader(self, msg: str):
         self.log.append(LogEntry(term=self.current_term, msg=msg))
+
+    def append_log_by_follower(self, log_entry: LogEntry):
+        self.log.append(log_entry)

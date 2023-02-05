@@ -48,8 +48,8 @@ class ElectionTimeoutService:
                 logging.info("Election timeout reached. Starting election...")
 
                 controller = self._node.controller
-                self._node = controller.change_node_state("candidate")
-                self._node.start_election()  # type: ignore
+                self._node = controller.convert_to_candidate()
+                self._node.start_election()
 
                 self._election_timeout_ms = self._generate_election_timeout()
                 self.receive_heartbeat()

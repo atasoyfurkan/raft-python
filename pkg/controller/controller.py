@@ -1,9 +1,8 @@
 import logging
-import threading
-import json
 from pkg.states import Follower, Candidate, Leader
 from pkg.models import Storage
-from pkg.services import NetworkService
+from pkg.services import ListenService
+from typing import cast
 
 
 class Controller:
@@ -20,88 +19,36 @@ class Controller:
         )
         self._node: Follower | Candidate | Leader = Follower(self, storage)
 
-        # Start listen thread
-        threading.Thread(target=self._listen_thread).start()
+        self._listen_service = ListenService(self)
 
-    @property
-    def state(self):
-        if isinstance(self._node, Follower):
-            return "follower"
-        elif isinstance(self._node, Candidate):
-            return "candidate"
-        elif isinstance(self._node, Leader):
-            return "leader"
-
-    def _listen_thread(self):
-        while True:
-            received_data = NetworkService.listen_tcp_socket()
-            if received_data is None:
-                logging.error("Received data is None")
-
-            message = json.loads(received_data)
-            method = message["method"]
-            args = message["args"]
-
-            if method == "vote_request":
-                self._node.receive_vote_request(
-                    candidate_hostname=args["sender_node_hostname"],
-                    candidate_term=args["current_term"],
-                    candidate_log_length=args["log_length"],
-                    candidate_log_term=args["last_term"],
-                )
-
-            elif method == "vote_response":
-                self._node.receive_vote_response(
-                    voter_hostname=args["sender_node_hostname"],
-                    granted=args["granted"],
-                    voter_term=args["voter_term"],
-                )
-
-            elif method == "log_request":
-                self._node.receive_log_request(
-                    leader_hostname=args["leader_hostname"],
-                    leader_term=args["leader_term"],
-                    prefix_len=args["prefix_len"],
-                    prefix_term=args["prefix_term"],
-                    leader_commit=args["leader_commit"],
-                    suffix=args["suffix"],
-                )
-            elif method == "log_response":
-                self._node.receive_log_response(
-                    follower=args["sender_node_hostname"],
-                    term=args["current_term"],
-                    ack=args["ack"],
-                    success=args["success"],
-                )
-
-            elif method == "write":
-                self.handle_client_write_request(msg=args["msg"])
+    def __del__(self):
+        self._listen_service.stop()
 
     def handle_client_read_request(self):
         raise NotImplementedError
 
     def handle_client_write_request(self, msg: str):
-        self._node.receive_client_request(msg=msg)
+        self._node.receive_client_write_request(msg=msg)
 
-    def _close_threads_while_changing_state(self):
-        if self.state == "follower" or self.state == "candidate":
-            self._node._election_timeout_service.stop()  # type: ignore
-        elif self.state == "leader":
-            self._node._heartbeat_service.stop()  # type: ignore
+    def convert_to_follower(self) -> Follower:
+        return cast(Follower, self._convert(Follower))
 
-    def change_node_state(self, new_state: str) -> Follower | Candidate | Leader:
-        if new_state == self.state:
-            logging.info(f"New state ({new_state}) is same as current state ({self.state}). No change.")
-        else:
-            self._close_threads_while_changing_state()
+    def convert_to_candidate(self) -> Candidate:
+        return cast(Candidate, self._convert(Candidate))
 
-            storage = self._node.storage
-            if new_state == "follower":
-                self._node = Follower(self, storage)
-            elif new_state == "candidate":
-                self._node = Candidate(self, storage)
-            elif new_state == "leader":
-                self._node = Leader(self, storage)
-            logging.info(f"New state is {new_state}")
+    def convert_to_leader(self) -> Leader:
+        return cast(Leader, self._convert(Leader))
 
+    def _convert(self, NewType: type[Follower | Candidate | Leader]) -> Follower | Candidate | Leader:
+        if type(self._node) is not NewType:
+            logging.info(f"New type is {NewType}.")
+            self._close_threads_while_converting()
+            node = NewType(self, self._node.storage)
+            self._node = node
         return self._node
+
+    def _close_threads_while_converting(self):
+        if type(self._node) is Follower or type(self._node) is Candidate:
+            self._node._election_timeout_service.stop()
+        elif type(self._node) is Leader:
+            self._node._heartbeat_service.stop()

@@ -12,7 +12,6 @@ if os.environ.get("TYPE_CHECKING"):
 class HeartbeatService:
     def __init__(self, leader: Leader):
         self._leader = leader
-        self._thread = None
         self._stop_thread = False
 
         threading.Thread(target=self._heartbeat_thread).start()

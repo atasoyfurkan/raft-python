@@ -55,10 +55,7 @@ class Candidate(Node):
                 logging.info(
                     f"Leader is elected. Total votes: {len(self._votes_received)} / {settings.NUMBER_OF_NODES}"
                 )
-                self.controller.change_node_state("leader")
+                self.controller.convert_to_leader()
 
         elif voter_term > self.storage.current_term:
             self._discover_new_term(voter_term)
-
-    # def receive_log_request(self):
-    #     raise NotImplementedError

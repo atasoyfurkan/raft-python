@@ -21,5 +21,7 @@ while True:
 
     logging.info(f"Client sending write to {receiver_hostname}")
 
-    NetworkService.send_tcp_message(json.dumps(message), receiver_hostname)
-    counter += 1
+    if NetworkService.send_tcp_message(json.dumps(message), receiver_hostname):
+        counter += 1
+    else:
+        logging.error(f"Client failed to send write to {receiver_hostname}")

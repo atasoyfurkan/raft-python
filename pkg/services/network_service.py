@@ -7,7 +7,7 @@ class NetworkService:
     serversocket = None
 
     def __init__(self):
-        # initialize the serversocket
+        """initialize the serversocket"""
         self._get_serversocket()
 
     def __del__(self):
@@ -24,7 +24,6 @@ class NetworkService:
 
         return cls.serversocket
 
-    # TODO: close the socket when destruction happens
     @classmethod
     def close_serversocket(cls):
         if cls.serversocket is not None:

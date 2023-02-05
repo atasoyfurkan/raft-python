@@ -29,9 +29,6 @@ class Leader(Node):
             self._acked_length[follower_hostname] = 0
             self.replicate_log(follower_hostname)
 
-    def _send_client_response(self):
-        raise NotImplementedError
-
     def _send_log_request(self, follower_hostname: str, prefix_len: int, prefix_term: int, suffix: list[LogEntry]):
         message = {
             "method": "log_request",
@@ -49,17 +46,20 @@ class Leader(Node):
                 f"Sending log request to {follower_hostname} with leader_term: {message['args']['leader_term']} and suffix: {message['args']['suffix']}"
             )
         else:
-            logging.info(f"Sending log request (serves as heartbeat) to {follower_hostname}")
+            logging.debug(f"Sending log request (serves as heartbeat) to {follower_hostname}")
 
         NetworkService.send_tcp_message(json.dumps(message), follower_hostname)
 
-    def receive_client_request(self, msg: str):
-        logging.info(f"Client request is received: {msg} by the leader node.")
-        self.storage.append_log(msg)
+    def receive_client_write_request(self, msg: str):
+        logging.info(f"Client write request is received: {msg} by the leader node.")
+        self.storage.append_log_by_leader(msg)
         self._acked_length[settings.HOSTNAME] = len(self.storage.log)
 
         for follower_hostname in self._other_node_hostnames:
-            self.replicate_log(follower_hostname)
+            self.replicate_log(follower_hostname=follower_hostname)
+
+    def _send_client_response(self):
+        raise NotImplementedError
 
     def replicate_log(self, follower_hostname: str):
         prefix_len = self._sent_length[follower_hostname]
@@ -76,29 +76,42 @@ class Leader(Node):
             follower_hostname=follower_hostname, prefix_len=prefix_len, prefix_term=prefix_term, suffix=suffix
         )
 
-    def receive_log_response(self, follower, term, ack, success):
-        if term == self.storage.current_term:
-            if success and ack >= self._acked_length[follower]:
-                self._sent_length[follower] = ack
-                self._acked_length[follower] = ack
-                self._commit_log_entries()
-            elif self._sent_length[follower] > 0:
-                self._sent_length[follower] -= 1
-                self.replicate_log(follower_hostname=follower)
+    def receive_log_response(self, follower_hostname: str, term: int, ack: int, success: bool):
+        logging.info(
+            f"Log response received from: {follower_hostname}, current state is leader, received data -> term: {term}, ack: {ack}, success: {success}"
+        )
 
-        super().receive_log_response(follower=follower, term=term, ack=ack, success=success)
+        if term == self.storage.current_term:
+            if success and ack >= self._acked_length[follower_hostname]:
+                self._sent_length[follower_hostname] = ack
+                self._acked_length[follower_hostname] = ack
+                self._commit_log_entries()
+
+            elif self._sent_length[follower_hostname] > 0:
+                self._sent_length[follower_hostname] -= 1
+                self.replicate_log(follower_hostname=follower_hostname)
+
+        elif term > self.storage.current_term:
+            self._discover_new_term(term)
 
     def _commit_log_entries(self):
-        logging.info("Committing log entries")
         min_acks = settings.NUMBER_OF_NODES / 2 + 1
-        ready = [i for i in range(1, len(self.storage.log) + 1) if
-                 self._get_number_of_nodes_with_larger_ack_len(given_ack_len=i) >= min_acks]
-        if ready:
-            if (max(ready) > self.storage.commit_length) and (
-                    self.storage.log[max(ready) - 1].term == self.storage.current_term):
-                for i in range(self.storage.commit_length, max(ready)):
-                    self._deliver_log_entry(self.storage.log[i])
-                self.storage.commit_length = max(ready)
+
+        """List of log prefix lengths that are ready to commit, and if ready is nonempty, max(ready) is the maximum log prefix length that we can commit."""
+        ready = [
+            i
+            for i in range(1, len(self.storage.log) + 1)
+            if self._get_number_of_nodes_with_larger_ack_len(given_ack_len=i) >= min_acks
+        ]
+        if (
+            ready != []
+            and (max(ready) > self.storage.commit_length)
+            and (self.storage.log[max(ready) - 1].term == self.storage.current_term)
+        ):
+            logging.info("Committing log entries")
+            for i in range(self.storage.commit_length, max(ready)):
+                self._deliver_log_entry(self.storage.log[i], log_index=i)
+            self.storage.commit_length = max(ready)
 
     def _get_number_of_nodes_with_larger_ack_len(self, given_ack_len: int) -> int:
-        return sum([1 for ack_length in self._acked_length.values() if ack_length > given_ack_len])
+        return sum([1 for ack_length in self._acked_length.values() if ack_length >= given_ack_len])
