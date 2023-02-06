@@ -39,7 +39,7 @@ class Leader(Node):
                 "prefix_len": prefix_len,
                 "prefix_term": prefix_term,
                 "leader_commit": self.storage.commit_length,
-                "suffix": [log_entry.__dict__ for log_entry in suffix],
+                "suffix": [log_entry.to_dict() for log_entry in suffix],
             },
         }
         if len(suffix) > 0:
@@ -51,7 +51,7 @@ class Leader(Node):
 
         NetworkService.send_tcp_message(json.dumps(message), follower_hostname)
 
-    def receive_client_write_request(self, msg: str, client_hostname: str):
+    def receive_client_write_request(self, client_hostname: str, msg: str):
         logging.info(f"Client write request is received: {msg} by the leader node.")
         self.storage.append_log_by_leader(msg)
         self._acked_length[settings.HOSTNAME] = len(self.storage.log)
@@ -61,18 +61,20 @@ class Leader(Node):
         for follower_hostname in self._other_node_hostnames:
             self.replicate_log(follower_hostname=follower_hostname)
 
-    def _send_client_response(self, log_entry: LogEntry, log_index: int):
+    def _send_client_write_response(self, log_entry: LogEntry, log_index: int):
         message = {
-            "method": "ack",
+            "method": "write_ack",
             "args": {
                 "success": True,
-                "log_entry": log_entry.__dict__,
+                "log_entry": log_entry.to_dict(),
                 "leader": settings.HOSTNAME,
             },
         }
         client_hostname = self._waiting_clients[log_index]
 
-        logging.info(f"Sending client response to {client_hostname} with log_entry: {message['args']['log_entry']}")
+        logging.info(
+            f"Sending client write response to {client_hostname} with log_entry: {message['args']['log_entry']}"
+        )
 
         NetworkService.send_tcp_message(message=json.dumps(message), receiver_host=client_hostname)
 
@@ -126,7 +128,7 @@ class Leader(Node):
             logging.info("Committing log entries")
             for i in range(self.storage.commit_length, max(ready)):
                 self.controller.apply_log_entry(log_entry=self.storage.log[i])
-                self._send_client_response(log_entry=self.storage.log[i], log_index=i)
+                self._send_client_write_response(log_entry=self.storage.log[i], log_index=i)
             self.storage.commit_length = max(ready)
 
     def _get_number_of_nodes_with_larger_ack_len(self, given_ack_len: int) -> int:

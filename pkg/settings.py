@@ -35,3 +35,4 @@ ITERATION_SLEEP_TIME_MS = int(_getenv_required("ITERATION_SLEEP_TIME_MS"))
 
 # Global variables
 OTHER_NODE_HOSTNAMES = _get_other_node_hostnames(HOSTNAME, NUMBER_OF_NODES)
+STORAGE_PATH = "/usr/src/storage"

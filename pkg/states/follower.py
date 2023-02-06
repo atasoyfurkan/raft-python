@@ -75,8 +75,7 @@ class Follower(Node):
                 self.storage.append_log_by_follower(entry)
 
         if leader_commit > self.storage.commit_length:
-            # TODO: deliver log should be implemented
             """This means that new records are ready to be committed and delivered to the application"""
             for i in range(self.storage.commit_length, leader_commit):
-                self._deliver_log_entry(log_entry=self.storage.log[i], log_index=i)
+                self.controller.apply_log_entry(log_entry=self.storage.log[i])
             self.storage.commit_length = leader_commit

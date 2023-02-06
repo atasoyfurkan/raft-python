@@ -37,6 +37,7 @@ class ListenService:
 
             node = self._controller._node
 
+            # Internal requests
             if method == "vote_request":
                 node.receive_vote_request(
                     candidate_hostname=args["sender_node_hostname"],
@@ -59,7 +60,7 @@ class ListenService:
                     prefix_len=args["prefix_len"],
                     prefix_term=args["prefix_term"],
                     leader_commit=args["leader_commit"],
-                    suffix=[LogEntry(log_entry_dict=log_entry_dict) for log_entry_dict in args["suffix"]],
+                    suffix=[LogEntry.from_dict(log_entry_dict=log_entry_dict) for log_entry_dict in args["suffix"]],
                 )
             elif method == "log_response":
                 node.receive_log_response(
@@ -69,5 +70,12 @@ class ListenService:
                     success=args["success"],
                 )
 
+            # Client requests
             elif method == "write":
                 self._controller.handle_client_write_request(client_hostname=args["hostname"], msg=args["msg"])
+
+            elif method == "read_value_from_key":
+                self._controller.handle_client_read_request(client_hostname=args["hostname"], key=args["key"])
+
+            elif method == "read_key_from_value":
+                self._controller.handle_client_read_request(client_hostname=args["hostname"], value=args["value"])
