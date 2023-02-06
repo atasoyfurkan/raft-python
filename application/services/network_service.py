@@ -31,12 +31,18 @@ class NetworkService:
             cls.serversocket = None
 
     @classmethod
-    def listen_tcp_socket(cls) -> str:
+    def _listen_tcp_socket(cls) -> socket.socket:
         logging.debug(f"Accepting connections on {HOSTNAME}:{PORT}")
         serversocket = cls._get_serversocket()
 
         clientsocket, address = serversocket.accept()
         logging.debug(f"Received connection from {address}")
+
+        return clientsocket
+
+    @classmethod
+    def receive_tcp_message(cls) -> str:
+        clientsocket = cls._listen_tcp_socket()
 
         with clientsocket:
             data = clientsocket.recv(10240).decode("utf-8")

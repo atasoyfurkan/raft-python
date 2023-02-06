@@ -27,7 +27,7 @@ class ListenService:
         logging.debug("Listen thread started.")
 
         while not self._stop_thread:
-            received_data = NetworkService.listen_tcp_socket()
+            received_data = NetworkService.receive_tcp_message()
             if received_data is None:
                 logging.error("Received data is None")
 
@@ -72,10 +72,16 @@ class ListenService:
 
             # Client requests
             elif method == "write":
-                self._controller.handle_client_write_request(client_hostname=args["hostname"], msg=args["msg"])
+                self._controller.handle_client_write_request(
+                    client_hostname=args["hostname"], request_id=args["request_id"], msg=args["msg"]
+                )
 
             elif method == "read_value_from_key":
-                self._controller.handle_client_read_request(client_hostname=args["hostname"], key=args["key"])
+                self._controller.handle_client_read_request(
+                    client_hostname=args["hostname"], request_id=args["request_id"], key=args["key"]
+                )
 
             elif method == "read_key_from_value":
-                self._controller.handle_client_read_request(client_hostname=args["hostname"], value=args["value"])
+                self._controller.handle_client_read_request(
+                    client_hostname=args["hostname"], request_id=args["request_id"], value=args["value"]
+                )

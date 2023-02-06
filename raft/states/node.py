@@ -118,13 +118,14 @@ class Node(ABC):
         else:
             logging.error("There is no 'current_leader' to send log response")
 
-    def receive_client_write_request(self, client_hostname: str, msg: str):
+    def receive_client_write_request(self, client_hostname: str, request_id: str, msg: str):
         logging.info(
             f"Client write request is received: {msg} by a non-leader node. Leader hostname {self.storage.current_leader} is forwarding to the clients..."
         )
         message = {
             "method": "write_ack",
             "args": {"success": False, "log_entry": {}, "leader": self.storage.current_leader},
+            "request_id": request_id,
         }
 
         NetworkService.send_tcp_message(message=json.dumps(message), receiver_host=client_hostname)

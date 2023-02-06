@@ -9,4 +9,4 @@ RUN pip3 install --no-cache-dir --upgrade pip pipenv && \
 
 COPY . /usr/src/app/
 
-CMD [ "python3", "./client.py" ]
+CMD [ "python3", "./main.py" ]

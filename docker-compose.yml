@@ -3,8 +3,8 @@ version: '3'
 services:
   node0:
     build:
-      context: .
-      dockerfile: raft/Dockerfile
+      context: ./raft
+      dockerfile: Dockerfile
     volumes:
       - ./raft:/usr/src/app
       - storage0:/usr/src/storage
@@ -18,8 +18,8 @@ services:
       - ITERATION_SLEEP_TIME_MS
   node1:
     build:
-      context: .
-      dockerfile: raft/Dockerfile
+      context: ./raft
+      dockerfile: Dockerfile
     volumes:
       - ./raft:/usr/src/app
       - storage1:/usr/src/storage
@@ -33,8 +33,8 @@ services:
       - ITERATION_SLEEP_TIME_MS
   node2:
     build:
-      context: .
-      dockerfile: raft/Dockerfile
+      context: ./raft
+      dockerfile: Dockerfile
     volumes:
       - ./raft:/usr/src/app
       - storage2:/usr/src/storage
@@ -48,8 +48,8 @@ services:
       - ITERATION_SLEEP_TIME_MS
   node3:
     build:
-      context: .
-      dockerfile: raft/Dockerfile
+      context: ./raft
+      dockerfile: Dockerfile
     volumes:
       - ./raft:/usr/src/app
       - storage3:/usr/src/storage
@@ -63,8 +63,8 @@ services:
       - ITERATION_SLEEP_TIME_MS
   node4:
     build:
-      context: .
-      dockerfile: raft/Dockerfile
+      context: ./raft
+      dockerfile: Dockerfile
     volumes:
       - ./raft:/usr/src/app
       - storage4:/usr/src/storage
@@ -79,8 +79,8 @@ services:
 
   client:
     build:
-      context: .
-      dockerfile: application/Dockerfile
+      context: ./application
+      dockerfile: Dockerfile
     volumes:
       - ./application:/usr/src/app
     environment:

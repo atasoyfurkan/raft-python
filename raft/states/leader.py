@@ -51,29 +51,35 @@ class Leader(Node):
 
         NetworkService.send_tcp_message(json.dumps(message), follower_hostname)
 
-    def receive_client_write_request(self, client_hostname: str, msg: str):
+    def receive_client_write_request(self, client_hostname: str, request_id: str, msg: str):
         logging.info(f"Client write request is received: {msg} by the leader node.")
         self.storage.append_log_by_leader(msg)
         self._acked_length[settings.HOSTNAME] = len(self.storage.log)
 
-        self._waiting_clients[len(self.storage.log) - 1] = client_hostname
+        self._waiting_clients[len(self.storage.log) - 1] = {
+            "client_hostname": client_hostname,
+            "request_id": request_id,
+        }
 
         for follower_hostname in self._other_node_hostnames:
             self.replicate_log(follower_hostname=follower_hostname)
 
     def _send_client_write_response(self, log_entry: LogEntry, log_index: int):
+        client_hostname = self._waiting_clients[log_index]["client_hostname"]
+        request_id = self._waiting_clients[log_index]["request_id"]
+
         message = {
             "method": "write_ack",
             "args": {
                 "success": True,
                 "log_entry": log_entry.to_dict(),
                 "leader": settings.HOSTNAME,
+                "request_id": request_id,
             },
         }
-        client_hostname = self._waiting_clients[log_index]
 
         logging.info(
-            f"Sending client write response to {client_hostname} with log_entry: {message['args']['log_entry']}"
+            f"Sending client write response to {client_hostname} for request id: {request_id} with log_entry: {message['args']['log_entry']}"
         )
 
         NetworkService.send_tcp_message(message=json.dumps(message), receiver_host=client_hostname)

@@ -4,6 +4,7 @@ from states import Follower, Candidate, Leader
 from models import Storage, LogEntry, StateMachine
 from services import ListenService, NetworkService
 from typing import cast, Optional
+import settings
 
 
 class Controller:
@@ -16,7 +17,9 @@ class Controller:
     def __del__(self):
         self._listen_service.stop()
 
-    def handle_client_read_request(self, client_hostname: str, key: Optional[str] = None, value: Optional[str] = None):
+    def handle_client_read_request(
+        self, client_hostname: str, request_id: str, key: Optional[str] = None, value: Optional[str] = None
+    ):
         result = None
         if key is not None:
             result = self._state_machine.read_value_from_key(key=key)
@@ -28,27 +31,34 @@ class Controller:
             success = False
             result = "No result"
 
-        self._send_client_read_response(client_hostname=client_hostname, success=success, result=result)
+        self._send_client_read_response(
+            client_hostname=client_hostname, request_id=request_id, success=success, result=result
+        )
 
-    def _send_client_read_response(self, client_hostname: str, success: bool, result: str):
+    def _send_client_read_response(self, client_hostname: str, request_id: str, success: bool, result: str):
         message = {
             "method": "read_ack",
             "args": {
                 "success": success,
                 "result": result,
                 "leader": self._node.storage.current_leader,
+                "sender_hostname": settings.HOSTNAME,
+                "request_id": request_id,
             },
         }
-        logging.info(f"Sending client read response to {client_hostname} with result: {message['args']['result']}")
+        logging.info(
+            f"Sending client read response to {client_hostname} for request id: {request_id} with result: {message['args']['result']}"
+        )
 
         NetworkService.send_tcp_message(message=json.dumps(message), receiver_host=client_hostname)
 
     def handle_client_write_request(
         self,
         client_hostname: str,
+        request_id: str,
         msg: str,
     ):
-        self._node.receive_client_write_request(client_hostname=client_hostname, msg=msg)
+        self._node.receive_client_write_request(client_hostname=client_hostname, request_id=request_id, msg=msg)
 
     def apply_log_entry(self, log_entry: LogEntry):
         self._state_machine.apply_log_entry(log_entry=log_entry)
