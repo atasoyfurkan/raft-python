@@ -19,7 +19,7 @@ class NetworkService:
             logging.debug(f"Initializing listener on {HOSTNAME}:{PORT}")
             serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             serversocket.bind((HOSTNAME, PORT))
-            serversocket.listen()
+            serversocket.listen(100)
             cls.serversocket = serversocket
 
         return cls.serversocket

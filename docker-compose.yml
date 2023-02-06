@@ -87,6 +87,7 @@ services:
       - HOSTNAME=client
       - PORT
       - NUMBER_OF_NODES
+      - CLIENT_RETRY_TIMEOUT_MS
 
 volumes:
   storage0:

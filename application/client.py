@@ -113,9 +113,16 @@ class Client:
             del self.requests[request_id]
         else:
             logging.info(f"Client send write to wrong leader. Redirecting to leader: {leader_hostname}...")
-            message = self.requests[request_id]["message"]
-            key = message["args"]["msg"]["key"]
-            value = message["args"]["msg"]["value"]
+            if not leader_hostname:
+                logging.info(
+                    f"Client received write ack without leader. Waiting {settings.CLIENT_RETRY_TIMEOUT_MS} ms and randomly choosing a node..."
+                )
+                time.sleep(float(settings.CLIENT_RETRY_TIMEOUT_MS) / 1000)
+                leader_hostname = self.choose_random_node()
+
+            msg = json.loads(self.requests[request_id]["message"]["args"]["msg"])
+            key = msg["key"]
+            value = msg["value"]
 
             self.send_write_request(receiver_hostname=leader_hostname, key=key, value=value)
 
@@ -137,6 +144,6 @@ class Client:
         if self.requests[request_id]["ack_count"] > settings.NUMBER_OF_NODES / 2:
             logging.info(f"Client received read ack from quorum of nodes")
             logging.info(
-                f"Received URL: {self.requests[request_id]['result']} for id: {self.requests[request_id]['args']['value']}"
+                f"Received URL: {self.requests[request_id]['result'] or 'No result'} for id: {self.requests[request_id]['message']['args']['value']}"
             )
             del self.requests[request_id]

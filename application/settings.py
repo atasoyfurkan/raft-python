@@ -16,6 +16,7 @@ def _getenv_required(key: str) -> str:
 HOSTNAME = _getenv_required("HOSTNAME")
 PORT = int(_getenv_required("PORT"))
 NUMBER_OF_NODES = int(_getenv_required("NUMBER_OF_NODES"))
+CLIENT_RETRY_TIMEOUT_MS = int(_getenv_required("CLIENT_RETRY_TIMEOUT_MS"))
 
 # Global variables
 NODE_HOSTNAMES = [f"node{i}" for i in range(NUMBER_OF_NODES)]
