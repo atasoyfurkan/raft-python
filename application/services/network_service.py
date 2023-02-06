@@ -1,6 +1,6 @@
 import socket
 import logging
-from pkg.settings import HOSTNAME, PORT
+from settings import HOSTNAME, PORT
 
 
 class NetworkService:

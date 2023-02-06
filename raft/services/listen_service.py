@@ -3,12 +3,12 @@ import logging
 import threading
 import json
 import os
-from pkg.models import LogEntry
-from pkg.services import NetworkService
+from models import LogEntry
+from services import NetworkService
 
 
 if os.environ.get("TYPE_CHECKING"):
-    from pkg.controller import Controller
+    from controller import Controller
 
 
 class ListenService:

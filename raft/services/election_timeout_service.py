@@ -4,10 +4,10 @@ import random
 import logging
 import threading
 import os
-import pkg.settings as settings
+import settings
 
 if os.environ.get("TYPE_CHECKING"):
-    from pkg.states import Follower, Candidate
+    from states import Follower, Candidate
 
 
 class ElectionTimeoutService:

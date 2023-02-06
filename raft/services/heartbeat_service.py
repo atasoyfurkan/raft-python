@@ -1,12 +1,12 @@
 from __future__ import annotations
 import threading
-import pkg.settings as settings
+import settings
 import logging
 import time
 import os
 
 if os.environ.get("TYPE_CHECKING"):
-    from pkg.states import Leader
+    from states import Leader
 
 
 class HeartbeatService:

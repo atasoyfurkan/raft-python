@@ -1,7 +1,7 @@
 import os
 import threading
-from pkg.models import LogEntry
-from pkg.settings import STORAGE_PATH
+from models import LogEntry
+from settings import STORAGE_PATH
 
 
 class Storage:

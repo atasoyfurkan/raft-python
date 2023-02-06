@@ -3,8 +3,8 @@ import logging
 import time
 import random
 import threading
-from pkg.services import NetworkService
-import pkg.settings as settings
+from services import NetworkService
+import settings
 
 logging.info("Client is started")
 
@@ -37,7 +37,7 @@ while True:
     time.sleep(5)
 
     random_node_index = random.randint(0, settings.NUMBER_OF_NODES - 1)
-    receiver_hostname = f"node{random_node_index}"
+    receiver_hostname = settings.NODE_HOSTNAMES[random_node_index]
 
     key = counter
     value = f"google.com/{key}"

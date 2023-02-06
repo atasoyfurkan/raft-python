@@ -3,13 +3,12 @@ from abc import ABC
 import logging
 import json
 import os
-import time
-import pkg.settings as settings
-from pkg.services import NetworkService
+import settings
+from services import NetworkService
 
 if os.environ.get("TYPE_CHECKING"):
-    from pkg.controller import Controller
-    from pkg.models import Storage, LogEntry
+    from controller import Controller
+    from models import Storage, LogEntry
 
 
 class Node(ABC):
@@ -143,7 +142,3 @@ class Node(ABC):
 
         if term > self.storage.current_term:
             self._discover_new_term(term)
-
-    # TODO: Discuss what is delivering a log entry
-    # def _deliver_log_entry(self, log_entry: LogEntry, log_index: int):
-    #     logging.info(f"Delivering log entry {log_index} with the message: ({log_entry.msg}) to application")

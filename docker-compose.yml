@@ -4,9 +4,9 @@ services:
   node0:
     build:
       context: .
-      dockerfile: containers/Dockerfile
+      dockerfile: raft/Dockerfile
     volumes:
-      - .:/usr/src/app
+      - ./raft:/usr/src/app
       - storage0:/usr/src/storage
     environment:
       - HOSTNAME=node0
@@ -19,9 +19,9 @@ services:
   node1:
     build:
       context: .
-      dockerfile: containers/Dockerfile
+      dockerfile: raft/Dockerfile
     volumes:
-      - .:/usr/src/app
+      - ./raft:/usr/src/app
       - storage1:/usr/src/storage
     environment:
       - HOSTNAME=node1
@@ -34,9 +34,9 @@ services:
   node2:
     build:
       context: .
-      dockerfile: containers/Dockerfile
+      dockerfile: raft/Dockerfile
     volumes:
-      - .:/usr/src/app
+      - ./raft:/usr/src/app
       - storage2:/usr/src/storage
     environment:
       - HOSTNAME=node2
@@ -49,9 +49,9 @@ services:
   node3:
     build:
       context: .
-      dockerfile: containers/Dockerfile
+      dockerfile: raft/Dockerfile
     volumes:
-      - .:/usr/src/app
+      - ./raft:/usr/src/app
       - storage3:/usr/src/storage
     environment:
       - HOSTNAME=node3
@@ -64,9 +64,9 @@ services:
   node4:
     build:
       context: .
-      dockerfile: containers/Dockerfile
+      dockerfile: raft/Dockerfile
     volumes:
-      - .:/usr/src/app
+      - ./raft:/usr/src/app
       - storage4:/usr/src/storage
     environment:
       - HOSTNAME=node4
@@ -80,17 +80,13 @@ services:
   client:
     build:
       context: .
-      dockerfile: containers/Dockerfile.client
+      dockerfile: application/Dockerfile
     volumes:
-      - .:/usr/src/app
+      - ./application:/usr/src/app
     environment:
       - HOSTNAME=client
       - PORT
       - NUMBER_OF_NODES
-      - ELECTION_TIMEOUT_LOWER_MS
-      - ELECTION_TIMEOUT_UPPER_MS
-      - HEARTBEAT_TIMEOUT_MS
-      - ITERATION_SLEEP_TIME_MS
 
 volumes:
   storage0:

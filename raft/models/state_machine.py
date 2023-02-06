@@ -4,7 +4,7 @@ import logging
 import json
 
 if os.environ.get("TYPE_CHECKING"):
-    from pkg.models import LogEntry
+    from models import LogEntry
 
 
 class StateMachine:

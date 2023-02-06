@@ -1,14 +1,14 @@
 from __future__ import annotations
 import logging
-import pkg.settings as settings
+import settings
 import os
 import json
-from pkg.states.node import Node
-from pkg.services import HeartbeatService, NetworkService
+from states.node import Node
+from services import HeartbeatService, NetworkService
 
 if os.environ.get("TYPE_CHECKING"):
-    from pkg.controller import Controller
-    from pkg.models import Storage, LogEntry
+    from controller import Controller
+    from models import Storage, LogEntry
 
 
 class Leader(Node):

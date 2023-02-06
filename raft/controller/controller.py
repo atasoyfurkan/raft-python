@@ -1,8 +1,8 @@
 import logging
 import json
-from pkg.states import Follower, Candidate, Leader
-from pkg.models import Storage, LogEntry, StateMachine
-from pkg.services import ListenService, NetworkService
+from states import Follower, Candidate, Leader
+from models import Storage, LogEntry, StateMachine
+from services import ListenService, NetworkService
 from typing import cast, Optional
 
 
