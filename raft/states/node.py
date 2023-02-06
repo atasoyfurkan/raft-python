@@ -124,8 +124,12 @@ class Node(ABC):
         )
         message = {
             "method": "write_ack",
-            "args": {"success": False, "log_entry": {}, "leader": self.storage.current_leader},
-            "request_id": request_id,
+            "args": {
+                "success": False,
+                "log_entry": {},
+                "leader": self.storage.current_leader,
+                "request_id": request_id,
+            },
         }
 
         NetworkService.send_tcp_message(message=json.dumps(message), receiver_host=client_hostname)
