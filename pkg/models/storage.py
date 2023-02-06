@@ -1,4 +1,5 @@
 import os
+import threading
 from pkg.models import LogEntry
 from pkg.settings import STORAGE_PATH
 
@@ -26,6 +27,10 @@ class Storage:
         self._voted_for = voted_for
         self._log = log
 
+        self._mutex_current_term = threading.Lock()
+        self._mutex_voted_for = threading.Lock()
+        self._mutex_log = threading.Lock()
+
     def append_log_by_leader(self, msg: str):
         self._append_log(LogEntry(term=self.current_term, msg=msg))
 
@@ -49,22 +54,26 @@ class Storage:
             return [LogEntry.from_json(log_entry_json=line) for line in f.readlines()]
 
     def _write_current_term(self, current_term: int):
-        with open(os.path.join(STORAGE_PATH, "current_term"), "w") as f:
-            f.write(str(current_term))
+        with self._mutex_current_term:
+            with open(os.path.join(STORAGE_PATH, "current_term"), "w") as f:
+                f.write(str(current_term))
 
     def _write_voted_for(self, voted_for: str | None):
-        with open(os.path.join(STORAGE_PATH, "voted_for"), "w") as f:
-            if voted_for is not None:
-                f.write(voted_for)
+        with self._mutex_voted_for:
+            with open(os.path.join(STORAGE_PATH, "voted_for"), "w") as f:
+                if voted_for is not None:
+                    f.write(voted_for)
 
     def _write_log(self, log: list[LogEntry]):
-        with open(os.path.join(STORAGE_PATH, "log"), "w") as f:
-            for log_entry in log:
-                f.write(f"{log_entry.to_json()}\n")
+        with self._mutex_log:
+            with open(os.path.join(STORAGE_PATH, "log"), "w") as f:
+                for log_entry in log:
+                    f.write(f"{log_entry.to_json()}\n")
 
     def _file_append_log(self, log_entry: LogEntry):
-        with open(os.path.join(STORAGE_PATH, "log"), "a") as f:
-            f.write(f"{log_entry.to_json()}\n")
+        with self._mutex_log:
+            with open(os.path.join(STORAGE_PATH, "log"), "a") as f:
+                f.write(f"{log_entry.to_json()}\n")
 
     @property
     def current_term(self) -> int:

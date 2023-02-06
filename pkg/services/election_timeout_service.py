@@ -50,13 +50,6 @@ class ElectionTimeoutService:
                 controller = self._node.controller
                 # TODO: Two threads (election timeout and listen) are accessing the same variable (controller._node) and editing it. This is not thread safe.
                 self._node = controller.convert_to_candidate()
-                """
-                TODO:
-                self.storage.current_term += 1
-                self.storage.voted_for = settings.HOSTNAME
-                self._votes_received = set([settings.HOSTNAME])
-                These attributes are not thread safe. They are being accessed by the election timeout thread and the listen thread.
-                """
                 self._node.start_election()
 
                 self._election_timeout_ms = self._generate_election_timeout()
