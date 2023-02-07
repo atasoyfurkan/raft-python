@@ -144,6 +144,6 @@ class Client:
         if self.requests[request_id]["ack_count"] > settings.NUMBER_OF_NODES / 2:
             logging.info(f"Client received read ack from quorum of nodes")
             logging.info(
-                f"Received URL: {self.requests[request_id]['result'] or 'No result'} for id: {self.requests[request_id]['message']['args']['value']}"
+                f"Received URL: {self.requests[request_id]['message']['args']['value']} for id: {self.requests[request_id]['result'] or 'No result'}"
             )
             del self.requests[request_id]

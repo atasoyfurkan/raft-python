@@ -59,6 +59,9 @@ class NetworkService:
                 clientsocket.sendall(str.encode(message))
             logging.debug(f"Sent data: {message}")
             return True
-        except socket.gaierror or ConnectionRefusedError:
-            logging.warning(f"Connection to {receiver_host} refused")
+        except socket.gaierror or ConnectionRefusedError or TimeoutError as exception:
+            if type(exception) is socket.gaierror or type(exception) is ConnectionRefusedError:
+                logging.warning(f"Connection to {receiver_host} refused")
+            elif type(exception) is TimeoutError:
+                logging.warning(f"Connection to {receiver_host} timed out")
             return False
