@@ -11,8 +11,8 @@ class Client:
     def __init__(self):
         logging.debug("Client is started")
 
-        self.requests = {}
-        self.current_leader = self.choose_random_node()
+        self.requests: dict[str, dict] = {}
+        self.current_leader: str = self.choose_random_node()
 
         threading.Thread(target=self.listen_thread).start()
 
