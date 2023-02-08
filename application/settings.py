@@ -1,7 +1,7 @@
 import os
 import logging
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(levelname)s %(message)s")
 
 # Utility functions
 def _getenv_required(key: str) -> str:
@@ -20,3 +20,5 @@ CLIENT_RETRY_TIMEOUT_MS = int(_getenv_required("CLIENT_RETRY_TIMEOUT_MS"))
 
 # Global variables
 NODE_HOSTNAMES = [f"node{i}" for i in range(NUMBER_OF_NODES)]
+DATA_PATH = "data/clickbench.00.csv"
+NUMBER_OF_DATA_ENTRIES = 10000

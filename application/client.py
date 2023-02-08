@@ -5,6 +5,7 @@ import random
 import threading
 from services import NetworkService
 import settings
+import csv
 
 
 class Client:
@@ -13,6 +14,7 @@ class Client:
 
         self.requests: dict[str, dict] = {}
         self.current_leader: str = self.choose_random_node()
+        self.data: list[list[str]] = self.load_data_from_file(settings.DATA_PATH)
 
         threading.Thread(target=self.listen_thread).start()
 
@@ -49,17 +51,14 @@ class Client:
 
     def main(self):
         counter = 0
-        while True:
-            time.sleep(5)
-
-            key = str(counter)
-            value = f"google.com/{key}"
+        for key, value in self.data[: settings.NUMBER_OF_DATA_ENTRIES]:
+            time.sleep(3)
+            logging.warning(f"Client sending write request {counter}...")
 
             success = self.send_write_request(receiver_hostname=self.current_leader, key=key, value=value)
 
             if success:
-                time.sleep(2)
-                self.send_read_request(value=value)
+                logging.debug(f"Clients successfully sent write to leader {self.current_leader}")
             else:
                 logging.error(
                     f"Client failed to send write to leader {self.current_leader}. Retrying with a random node."
@@ -126,6 +125,10 @@ class Client:
 
             self.send_write_request(receiver_hostname=leader_hostname, key=key, value=value)
 
+        time.sleep(3)
+        random_index = random.randint(0, settings.NUMBER_OF_DATA_ENTRIES - 1)
+        self.send_read_request(value=self.data[random_index][1])
+
     def receive_read_ack(
         self, success: bool, result: str, leader_hostname: str, sender_hostname: str, request_id: str
     ):
@@ -144,6 +147,15 @@ class Client:
         if self.requests[request_id]["ack_count"] > settings.NUMBER_OF_NODES / 2:
             logging.info(f"Client received read ack from quorum of nodes")
             logging.info(
-                f"Received URL: {self.requests[request_id]['message']['args']['value']} for id: {self.requests[request_id]['result'] or 'No result'}"
+                f"Received URL: {self.requests[request_id]['message']['args']['value']} for id: {self.requests[request_id]['result'] if 'result' in self.requests[request_id] else 'No result'}"
             )
             del self.requests[request_id]
+
+    def load_data_from_file(self, path) -> list[list[str]]:
+        data: list[list[str]] = []
+        with open(path, "r") as file:
+            reader = csv.reader(file)
+            for row in reader:
+                key, value = row[0].split("\t")
+                data.append([key, value])
+        return data

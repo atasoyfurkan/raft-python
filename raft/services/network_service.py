@@ -1,4 +1,5 @@
 import socket
+from socket import error as socket_error
 import logging
 from settings import HOSTNAME, PORT
 
@@ -59,9 +60,9 @@ class NetworkService:
                 clientsocket.sendall(str.encode(message))
             logging.debug(f"Sent data: {message}")
             return True
-        except socket.gaierror or ConnectionRefusedError or TimeoutError as exception:
+        except (socket.gaierror or ConnectionRefusedError or TimeoutError or socket_error) as exception:
             if type(exception) is socket.gaierror or type(exception) is ConnectionRefusedError:
-                logging.warning(f"Connection to {receiver_host} refused")
+                logging.debug(f"Connection to {receiver_host} refused")
             elif type(exception) is TimeoutError:
-                logging.warning(f"Connection to {receiver_host} timed out")
+                logging.debug(f"Connection to {receiver_host} timed out")
             return False
